@@ -29,14 +29,16 @@ However, app users cannot write SQL to create their own `Tanstack db` collection
     - Incremental parsing if possible for longer SQL statements.
     - Parser should be written in TypeScript/JavaScript for smaller bundle sizes.
     - Parser candidates:
-      - [lezer](https://lezer.codemirror.net/)
+      - [Lezer](https://lezer.codemirror.net/)
+      - [Chevrotain](https://chevrotain.io/docs/)
+      - [Antlr4](https://github.com/antlr/antlr4) - no incremental parsing
       - [Treesitter](https://tree-sitter.github.io/tree-sitter/) - compiles to WASM.
-      - [Ohm](https://ohmjs.org/)
-      - [Antlr4](https://github.com/antlr/antlr4)
-      - [Chevrotain](https://github.com/Chevrotain/chevrotain)
+      - [Ohm](https://ohmjs.org/) - doesn't have error correction
 3. Once parsed, each AST/CST node should either chain methods (of the tanstack db query builder) or apply a function (eq(), and()...).
 
 _It may be easier to generate own parser from custom grammar._
+- `Lezer` existing sql grammars:
+  - [Snowsql](https://github.com/Snowflake-Labs/lezer-snowsql/blob/main/src/snowsql.grammar)
 
 ### Additional features - if core features are done
 
