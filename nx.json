@@ -4,14 +4,11 @@
     "enabled": false
   },
   "targetDefaults": {
-    "format": {
-      "inputs": ["{workspaceRoot}/biome.json"],
-      "cache": true
-    },
     "test:lint": {
       "inputs": [
         "{projectRoot}/src/*",
         "{projectRoot}/test/*",
+        "{projectRoot}/package.json",
         "{workspaceRoot}/biome.json"
       ],
       "dependsOn": ["^build"],
@@ -21,6 +18,7 @@
       "inputs": [
         "{projectRoot}/src/*",
         "{projectRoot}/test/*",
+        "{projectRoot}/package.json",
         "{projectRoot}/tsconfig.json",
         "{workspaceRoot}/tsconfig.json"
       ],
@@ -30,16 +28,17 @@
     "test:unit": {
       "inputs": [
         "{projectRoot}/src/*",
-        "{projectRoot}/test/*",
+        "{projectRoot}/test/**/*",
+        "{projectRoot}/package.json",
         "{projectRoot}/vitest.config.ts"
       ],
-      "dependsOn": ["^build"],
-      "cache": true
+      "dependsOn": ["^build"]
     },
     "build": {
       "inputs": [
-        "{projectRoot}/src/*",
+        "{projectRoot}/src/**/*",
         "{projectRoot}/esbuild.ts",
+        "{projectRoot}/package.json",
         "{projectRoot}/vite.config.ts"
       ],
       "outputs": ["{projectRoot}/dist"],

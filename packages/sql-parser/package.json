@@ -1,0 +1,18 @@
+{
+  "name": "@menglinmaker/sql-parser",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:lint__": "biome lint --write",
+    "test:type__": "tsgo",
+    "test:unit__": "vitest run --coverage",
+    "build": "rm -rf ./dist && mkdir ./dist && lezer-generator ./src/grammar/sql.grammar -o ./src/grammar/parser"
+  },
+  "devDependencies": {
+    "@lezer/generator": "^1.8.0"
+  },
+  "dependencies": {
+    "@lezer/common": "^1.5.1",
+    "@lezer/lr": "^1.4.8"
+  }
+}

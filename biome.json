@@ -20,6 +20,7 @@
     "maxSize": 10000000,
     "includes": [
       "**/*",
+      "!**/*.js",
       "!**/node_modules",
       "!**/coverage",
       "!**/dist",

@@ -1,6 +1,7 @@
 {
   "name": "root",
   "private": true,
+  "type": "module",
   "scripts": {
     "format": "biome format --write",
     "lint": "biome lint --write",
@@ -30,6 +31,5 @@
   "simple-git-hooks": {
     "pre-commit": "pnpm format && pnpm lint"
   },
-  "packageManager": "pnpm@10.14.0",
-  "type": "module"
+  "packageManager": "pnpm@10.14.0"
 }
