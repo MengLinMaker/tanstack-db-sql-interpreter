@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "tui": {
+    "enabled": false
+  },
+  "targetDefaults": {
+    "format": {
+      "inputs": ["{workspaceRoot}/biome.json"],
+      "cache": true
+    },
+    "test:lint": {
+      "inputs": [
+        "{projectRoot}/src/*",
+        "{projectRoot}/test/*",
+        "{workspaceRoot}/biome.json"
+      ],
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "test:type": {
+      "inputs": [
+        "{projectRoot}/src/*",
+        "{projectRoot}/test/*",
+        "{projectRoot}/tsconfig.json",
+        "{workspaceRoot}/tsconfig.json"
+      ],
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "test:unit": {
+      "inputs": [
+        "{projectRoot}/src/*",
+        "{projectRoot}/test/*",
+        "{projectRoot}/vitest.config.ts"
+      ],
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "build": {
+      "inputs": [
+        "{projectRoot}/src/*",
+        "{projectRoot}/esbuild.ts",
+        "{projectRoot}/vite.config.ts"
+      ],
+      "outputs": ["{projectRoot}/dist"],
+      "dependsOn": ["^build"],
+      "cache": true
+    }
+  }
+}

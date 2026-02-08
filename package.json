@@ -1,0 +1,35 @@
+{
+  "name": "root",
+  "private": true,
+  "scripts": {
+    "format": "biome format --write",
+    "lint": "biome lint --write",
+    "build": "pnpm --filter '...[origin/main]' build",
+    "changeset": "changeset",
+    "changeset:publish": "changeset publish",
+    "changeset:version": "changeset version",
+    "postinstall": "simple-git-hooks",
+    "preinstall": "npx only-allow pnpm",
+    "knip": "knip",
+    "graph": "pnpm nx graph",
+    "watch": "nx watch --all -- 'nx run-many -t test:lint test:type test:unit build'"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.3",
+    "@types/node": "^24.6.2",
+    "@typescript/native-preview": "7.0.0-dev.20260201.1",
+    "@vitest/coverage-v8": "4.0.18",
+    "esbuild": "^0.25.9",
+    "knip": "5.63.1",
+    "nx": "21.5.2",
+    "simple-git-hooks": "2.13.1",
+    "typescript": "~5.9.2",
+    "vite": "7.3.1",
+    "vitest": "4.0.18"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm format && pnpm lint"
+  },
+  "packageManager": "pnpm@10.14.0",
+  "type": "module"
+}
