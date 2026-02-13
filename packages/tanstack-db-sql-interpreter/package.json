@@ -1,16 +1,20 @@
 {
-  "name": "@menglinmaker/sql-parser",
+  "name": "@menglinmaker/tanstack-db-sql-interpreter",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "scripts": {
     "test:lint": "biome lint --write",
     "test:type": "tsgo",
     "test:unit": "vitest run --coverage"
   },
+  "peerDependencies": {
+    "@tanstack/db": "^0.5.25"
+  },
   "dependencies": {
+    "@menglinmaker/sql-parser": "workspace:*",
     "node-sql-parser": "^5.4.0"
+  },
+  "devDependencies": {
+    "zod": "^4.3.6"
   }
 }

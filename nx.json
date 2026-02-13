@@ -42,8 +42,7 @@
         "{projectRoot}/vite.config.ts"
       ],
       "outputs": ["{projectRoot}/dist"],
-      "dependsOn": ["^build"],
-      "cache": true
+      "dependsOn": ["^build"]
     }
   }
 }
