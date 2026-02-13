@@ -1,8 +1,8 @@
-import { Context, QueryBuilder } from '@tanstack/db'
+import type { Context, QueryBuilder } from '@tanstack/db'
 import { parseTanstackDbSql } from '@menglinmaker/sql-parser'
-import { InitialQueryBuilder } from '@tanstack/db'
+import type { InitialQueryBuilder } from '@tanstack/db'
 import { LiveQuerySqlError } from './error'
-import { Collections } from './types'
+import type { Collections } from './types'
 import { selectAll } from './query/selectAll'
 import { collectionsFilter } from './helpers/collectionsFilter'
 
@@ -15,6 +15,7 @@ export const liveQuerySql = (collections: Collections, sql: string) => {
     if (!ast.from) throw new LiveQuerySqlError('Cannot interpret: FROM null')
     if (Array.isArray(ast.from)) {
       console.log(ast.columns[0].expr.column)
+      // @ts-expect-error rip
       const tableName = ast.from[0]!.table
 
       const fromCollections = collectionsFilter(collections, [tableName])

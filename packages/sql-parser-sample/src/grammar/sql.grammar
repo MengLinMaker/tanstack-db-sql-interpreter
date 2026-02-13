@@ -1,0 +1,249 @@
+/**
+ * Limited SQL for Tanstack db
+ * Grammar adapted from Antlr4: https://github.com/antlr/grammars-v4/tree/master/sql/sqlite
+ * Alternatively refer to SQLite syntax diagrams: https://sqlite.org/syntaxdiagrams.html
+ */
+
+@top SQL {
+  ignore* SELECT_STATEMENT semicolon__? ignore*
+}
+@skip { whitespace__ }
+@precedence {
+    and @left,
+    or @left,
+    ON__,
+    TABLE_NAME
+}
+
+/*
+ * CTE statement
+ */
+// WITH__ { @specialize<identifier__, 'WITH' | 'with'> }
+
+/*
+ * SELECT statement
+ */
+SELECT_STATEMENT {
+    SELECT
+    FROM
+    WHERE?
+    GROUP?
+    HAVING?
+    ORDER?
+    LIMIT?
+}
+
+/* SELECT clause */
+SELECT {
+    SELECT__ { @specialize<identifier__, 'SELECT' | 'select'> }
+    DISTINCT__ { @specialize<identifier__, 'DISTINCT' | 'distinct'> }?
+    SELECT_EXPRESSION (comma__ SELECT_EXPRESSION)*
+    EXCLUDE {
+        EXCLUDE__ { @specialize<identifier__, 'EXCLUDE' | 'exclude'> }
+        COLUMN_NAME + (comma__ COLUMN_NAME)*
+    }?
+}
+SELECT_EXPRESSION {
+    SELECT_ALL { STAR__ }
+    | SELECT_TABLE { TABLE_NAME dot__ STAR__ }
+    | SELECT_COLUMN { COLUMN }
+    | SELECT_COLUMN_AS { COLUMN AS__ COLUMN_ALIAS }
+    | SELECT_AGGREGATE { AGGREGATE }
+    | SELECT_AGGREGATE_AS { AGGREGATE AS__ COLUMN_ALIAS }
+}
+COLUMN_ALIAS { COLUMN_NAME }
+
+/* FROM clause */
+FROM {
+    FROM__ { @specialize<identifier__, 'FROM' | 'from'> }
+    TABLE
+    JOIN_EXPRESSION*
+}
+JOIN_EXPRESSION {
+    JOIN { JOIN__ TABLE JOIN_METHOD }
+    | LEFT_JOIN { LEFT__ JOIN__ TABLE JOIN_METHOD }
+    | RIGHT_JOIN { RIGHT__ JOIN__ TABLE JOIN_METHOD }
+    | INNER_JOIN { INNER__ JOIN__ TABLE JOIN_METHOD }
+    | FULL_JOIN { FULL__ JOIN__ TABLE JOIN_METHOD }
+}
+LEFT__ { @specialize<identifier__, 'LEFT' | 'left'> } 
+RIGHT__ { @specialize<identifier__, 'RIGHT' | 'right'> } 
+INNER__ { @specialize<identifier__, 'INNER' | 'inner'> } 
+FULL__ { @specialize<identifier__, 'FULL' | 'full'> }
+JOIN__ { @specialize<identifier__, 'JOIN' | 'join'> }
+JOIN_METHOD {
+    USING {
+        USING__ { @specialize<identifier__, 'USING' | 'using'> }
+        open_parenthesis__ COLUMN_NAME close_parenthesis__
+    }
+    | ON {
+        ON__ { @specialize<identifier__, 'ON' | 'on'> }
+        COLUMN EQUAL__ COLUMN
+    }
+}
+
+/* WHERE clause */
+WHERE {
+    WHERE__ { @specialize<identifier__, 'WHERE' | 'where'> }
+    CONDITION_EXPRESSION
+}
+
+/* GROUP clause */
+GROUP {
+    GROUP__ { @specialize<identifier__, 'GROUP' | 'group'> }
+    BY__ COLUMN (comma__ COLUMN)*
+}
+
+/* HAVING clause */
+HAVING {
+    HAVING__ { @specialize<identifier__, 'HAVING' | 'having'> }
+    CONDITION_EXPRESSION
+}
+
+/* ORDER clause */
+ORDER {
+    ORDER__ { @specialize<identifier__, 'ORDER' | 'order'> }
+    BY__ ORDER_EXPRESSION (comma__ ORDER_EXPRESSION)*
+}
+ORDER_EXPRESSION {
+    COLUMN (
+        ASC__ { @specialize<identifier__, 'ASC' | 'asc'> }
+        | DESC__ { @specialize<identifier__, 'DESC' | 'desc'> }
+    )?
+}
+
+/* LIMIT clause */
+LIMIT { LIMIT_EXPRESSION OFFSET_EXPRESSION? }
+LIMIT_EXPRESSION { LIMIT__ { @specialize<identifier__, 'LIMIT' | 'limit'> } NUMERIC_LITERAL__ }
+OFFSET_EXPRESSION { OFFSET__ { @specialize<identifier__, 'OFFSET' | 'offset'> } NUMERIC_LITERAL__ }
+
+/*
+ * Shared grammar
+ */
+
+/* Condition expression */
+CONDITION_EXPRESSION {
+    condition_base
+    | open_parenthesis__ CONDITION_EXPRESSION close_parenthesis__
+    | AND { CONDITION_EXPRESSION !and AND__ CONDITION_EXPRESSION }
+    | OR { CONDITION_EXPRESSION !or OR__ CONDITION_EXPRESSION }
+    | NOT { NOT__ CONDITION_EXPRESSION }
+}
+AND__ { @specialize<identifier__, 'AND' | 'and'> }
+OR__ { @specialize<identifier__, 'OR' | 'or'> }
+NOT__ { @specialize<identifier__, 'NOT' | 'not'> }
+condition_base {
+    EQ { COLUMN EQUAL__ EXPRESSION }
+    | NOT_EQ { COLUMN NOT_EQ__ EXPRESSION }
+    | GT { COLUMN GT__ EXPRESSION }
+    | GTE { COLUMN GTE__ EXPRESSION }
+    | LT { COLUMN LT__ EXPRESSION }
+    | LTE { COLUMN LTE__ EXPRESSION }
+    | IS_NULL { COLUMN IS__ NULL__ }
+    | LIKE { COLUMN LIKE__ STRING_LITERAL__ }
+    | ILIKE { COLUMN ILIKE__ STRING_LITERAL__ }
+    | IN_ARRAY {
+        COLUMN IN__
+        ARRAY { open_parenthesis__ LITERAL_VALUE (comma__ LITERAL_VALUE)* close_parenthesis__ }
+    }
+}
+LIKE__ { @specialize<identifier__, 'LIKE' | 'like'> }
+ILIKE__ { @specialize<identifier__, 'ILIKE' | 'ilike'> }
+IS__ { @specialize<identifier__, 'IS' | 'is'> }
+IN__ { @specialize<identifier__, 'IN' | 'in'> }
+BETWEEN__ { @specialize<identifier__, 'BETWEEN' | 'between'> }
+
+/* Expression */
+EXPRESSION { LITERAL_VALUE }
+
+/* Aggregate */
+AGGREGATE {
+    COUNT { COUNT__ open_parenthesis__ COLUMN close_parenthesis__ }
+    | COUNT_ALL { COUNT__ open_parenthesis__ STAR__ close_parenthesis__ }
+    | SUM { SUM__ open_parenthesis__ COLUMN close_parenthesis__ }
+    | AVG { AVG__ open_parenthesis__ COLUMN close_parenthesis__ }
+    | MIN { MIN__ open_parenthesis__ COLUMN close_parenthesis__ }
+    | MAX { MAX__ open_parenthesis__ COLUMN close_parenthesis__ }
+}
+COUNT__ { @specialize<identifier__, 'COUNT'> }
+SUM__ { @specialize<identifier__, 'SUM'> }
+AVG__ { @specialize<identifier__, 'AVG'> }
+MIN__ { @specialize<identifier__, 'MIN'> }
+MAX__ { @specialize<identifier__, 'MAX'> }
+
+/* Literal */
+LITERAL_VALUE {
+    NUMERIC_LITERAL__
+    | STRING_LITERAL__
+    | NULL__
+    | TRUE__ { @specialize<identifier__, 'TRUE' | 'true'> }
+    | FALSE__ { @specialize<identifier__, 'FALSE' | 'false'> }
+    | CURRENT_TIME__ { @specialize<identifier__, 'CURRENT_TIME' | 'current_time'> }
+    | CURRENT_DATE__ { @specialize<identifier__, 'CURRENT_DATE' | 'current_date'> }
+    | CURRENT_TIMESTAMP__ { @specialize<identifier__, 'CURRENT_TIMESTAMP' | 'current_timestamp'> }
+}
+NULL__ { @specialize<identifier__, 'NULL' | 'null'> }
+
+/* Column and TABLE */
+COLUMN {
+    COLUMN_NAME
+    | TABLE_NAME dot__ COLUMN_NAME
+}
+TABLE {
+    TABLE_NAME
+    | TABLE_ALIAS { TABLE_NAME TABLE_NAME }?
+}
+COLUMN_NAME { identifier__ }
+TABLE_NAME { identifier__ }
+
+/* Misc */
+ignore { MULTI_LINE_COMMENT__ }
+AS__ { @specialize<identifier__, 'AS' | 'as'>}
+BY__ { @specialize<identifier__, 'BY' | 'by'> }
+
+@tokens {
+    @precedence {
+        NUMERIC_LITERAL__,
+        STRING_LITERAL__,
+        identifier__
+    }
+  
+    identifier__ { $[A-Za-z0-9_]+ }
+    
+    /* Misc */
+    dot__ { '.' }
+    STAR__ { '*' }
+    // PIPE__ { '||' }
+
+    /* Syntax */
+    open_parenthesis__ { '(' }
+    close_parenthesis__ { ')' }
+    comma__ { ',' }
+    semicolon__ { ';' }
+
+    // /* Arithmetic operator */
+    // // PLUS__ { '+' }
+    // // MINUS__ { '-' }
+    // // DIVISION__ { '/' }
+    // // MODULUS__ { '%' }
+
+    // /* Comparison operator */
+    EQUAL__ { '=' }
+    NOT_EQ__ { '!=' | '<>' }
+    GT__ { '>' }
+    GTE__ { '>=' }
+    LT__ { '<' }
+    LTE__ { '<=' }
+
+    // /* Literals */
+    NUMERIC_LITERAL__ { // Numbers supported in JavaScript
+        // Integer, decimals, scientific
+        ('-'? $[0-9]+) ('.' $[0-9]+)? ($[eE] '-'? $[0-9]+)?
+        // Hex | Octal | Binary
+        | '0' $[xX] $[0-9A-F]+ | '0' $[oO] $[0-7]+ | '0' $[bB] $[0-1]+
+    }
+    STRING_LITERAL__ { $['] (![']|($[']$[']))+ $['] } // Wrapped in single comma `'` - use double comma inside string: 'isn''t it interesting?'
+
+    MULTI_LINE_COMMENT__ { '/*' (![/])* '*/' } // '/' will be considered illegal force comment to close
+    whitespace__ { @whitespace }
+}
