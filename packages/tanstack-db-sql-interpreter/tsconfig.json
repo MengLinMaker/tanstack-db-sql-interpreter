@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.json",
-  "exclude": ["./src/grammar/*"]
+  "exclude": ["./src/grammar/*"],
+  "compilerOptions": {
+    "noImplicitAny": false
+  }
 }

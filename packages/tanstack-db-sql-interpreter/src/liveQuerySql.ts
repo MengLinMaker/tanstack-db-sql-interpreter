@@ -9,6 +9,6 @@ export const liveQuerySql = (collections: Collections, sql: string) => {
     return selectStatementNode(ast.children[0]!, collections)
   }
 
-  const queryBuilder = (q: InitialQueryBuilder) => {}
+  const queryBuilder = (_q: InitialQueryBuilder) => {}
   return queryBuilder as never as QueryBuilder<Context>
 }

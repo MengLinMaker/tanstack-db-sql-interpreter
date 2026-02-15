@@ -1,6 +1,6 @@
-import { beforeAll, describe, expect, it } from 'vitest'
-import { liveQuerySql } from '../../src/liveQuerySql.ts'
+import { describe, expect, it } from 'vitest'
 import { collectionProperties } from '../../src/helpers/collection.ts'
+import { liveQuerySql } from '../../src/liveQuerySql.ts'
 import { eagerLiveQueryCollection, testCollectionFactory } from '../helper.ts'
 
 describe('FROM clause', () => {
