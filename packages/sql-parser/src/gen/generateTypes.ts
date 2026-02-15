@@ -1,10 +1,11 @@
 import { parser } from '@lezer/lezer'
+import ts from 'typescript'
 import {
   getRuleDeclarationNodes,
   getTypeInfoDeep,
   type TypeInfo,
 } from './ruleNode.ts'
-import ts from 'typescript'
+
 const { createPrinter, factory, SyntaxKind } = ts
 
 export const generateTypes = (grammar: string) => {
@@ -42,18 +43,13 @@ export const generateTypes = (grammar: string) => {
  * ```
  */
 const generateGenericNodeType = (typeInfo: TypeInfo) =>
-  nodeTypeBase(
+  nodeTypeChildrenBase(
     typeInfo,
-    factory.createPropertySignature(
-      undefined,
-      factory.createIdentifier('children'),
-      undefined,
-      factory.createArrayTypeNode(
-        factory.createParenthesizedType(
-          factory.createUnionTypeNode(
-            typeInfo.childrenName.map((name) =>
-              factory.createTypeReferenceNode(factory.createIdentifier(name)),
-            ),
+    factory.createArrayTypeNode(
+      factory.createParenthesizedType(
+        factory.createUnionTypeNode(
+          typeInfo.childrenName.map((name) =>
+            factory.createTypeReferenceNode(factory.createIdentifier(name)),
           ),
         ),
       ),
@@ -66,25 +62,20 @@ const generateGenericNodeType = (typeInfo: TypeInfo) =>
  * ```TypeScript
  * export type NODE_NAME = {
  *    name: 'NODE_NAME'
- *    children: (NODE_1 | NODE_2)[]
+ *    children: [NODE_1 | NODE_2]
  * }
  * ```
  */
 const generateChoiceNodeType = (typeInfo: TypeInfo) =>
-  nodeTypeBase(
+  nodeTypeChildrenBase(
     typeInfo,
-    factory.createPropertySignature(
-      undefined,
-      factory.createIdentifier('children'),
-      undefined,
-      factory.createTupleTypeNode([
-        factory.createUnionTypeNode(
-          typeInfo.childrenName.map((name) =>
-            factory.createTypeReferenceNode(factory.createIdentifier(name)),
-          ),
+    factory.createTupleTypeNode([
+      factory.createUnionTypeNode(
+        typeInfo.childrenName.map((name) =>
+          factory.createTypeReferenceNode(factory.createIdentifier(name)),
         ),
-      ]),
-    ),
+      ),
+    ]),
   )
 
 /**
@@ -98,16 +89,11 @@ const generateChoiceNodeType = (typeInfo: TypeInfo) =>
  * ```
  */
 const generateSequenceNodeType = (typeInfo: TypeInfo) =>
-  nodeTypeBase(
+  nodeTypeChildrenBase(
     typeInfo,
-    factory.createPropertySignature(
-      undefined,
-      factory.createIdentifier('children'),
-      undefined,
-      factory.createTupleTypeNode(
-        typeInfo.childrenName.map((name) =>
-          factory.createTypeReferenceNode(factory.createIdentifier(name)),
-        ),
+    factory.createTupleTypeNode(
+      typeInfo.childrenName.map((name) =>
+        factory.createTypeReferenceNode(factory.createIdentifier(name)),
       ),
     ),
   )
@@ -118,7 +104,7 @@ const generateSequenceNodeType = (typeInfo: TypeInfo) =>
  * ```TypeScript
  * export type NODE_NAME = {
  *    name: 'NODE_NAME'
- *    vallue: string
+ *    value: string
  * }
  * ```
  */
@@ -130,6 +116,27 @@ const generateLeafNodeType = (typeInfo: TypeInfo) =>
       factory.createIdentifier('value'),
       undefined,
       factory.createKeywordTypeNode(SyntaxKind.StringKeyword),
+    ),
+  )
+
+/**
+ * Abstract node with children boilerplate
+ *
+ * ```TypeScript
+ * export type NODE_NAME = {
+ *    name: 'NODE_NAME'
+ *    children: ...
+ * }
+ * ```
+ */
+const nodeTypeChildrenBase = (typeInfo: TypeInfo, typeNode: ts.TypeNode) =>
+  nodeTypeBase(
+    typeInfo,
+    factory.createPropertySignature(
+      undefined,
+      factory.createIdentifier('children'),
+      undefined,
+      typeNode,
     ),
   )
 
