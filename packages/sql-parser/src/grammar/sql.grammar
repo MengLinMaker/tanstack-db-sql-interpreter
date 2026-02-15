@@ -57,19 +57,15 @@ COLUMN_ALIAS { COLUMN_NAME__ }
 FROM {
     FROM__ { @specialize<identifier__, 'FROM' | 'from'> }
     TABLE
-    JOIN_EXPRESSION*
+    JOIN_EXPRESSION { JOIN_TYPE TABLE JOIN_METHOD }*
 }
-JOIN_EXPRESSION {
-    JOIN { JOIN__ TABLE JOIN_METHOD }
-    | LEFT_JOIN { LEFT__ JOIN__ TABLE JOIN_METHOD }
-    | RIGHT_JOIN { RIGHT__ JOIN__ TABLE JOIN_METHOD }
-    | INNER_JOIN { INNER__ JOIN__ TABLE JOIN_METHOD }
-    | FULL_JOIN { FULL__ JOIN__ TABLE JOIN_METHOD }
-}
-LEFT__ { @specialize<identifier__, 'LEFT' | 'left'> } 
-RIGHT__ { @specialize<identifier__, 'RIGHT' | 'right'> } 
-INNER__ { @specialize<identifier__, 'INNER' | 'inner'> } 
-FULL__ { @specialize<identifier__, 'FULL' | 'full'> }
+JOIN_TYPE { 
+    JOIN { JOIN__ }
+    | LEFT_JOIN { LEFT__ { @specialize<identifier__, 'LEFT' | 'left'> }  JOIN__ }
+    | RIGHT_JOIN { RIGHT__ { @specialize<identifier__, 'RIGHT' | 'right'> }  JOIN__ }
+    | INNER_JOIN { INNER__ { @specialize<identifier__, 'INNER' | 'inner'> }  JOIN__  }
+    | FULL_JOIN { FULL__ { @specialize<identifier__, 'FULL' | 'full'> } JOIN__ }
+ }
 JOIN__ { @specialize<identifier__, 'JOIN' | 'join'> }
 JOIN_METHOD {
     USING {
@@ -188,11 +184,11 @@ NULL__ { @specialize<identifier__, 'NULL' | 'null'> }
 /* Column and TABLE */
 COLUMN {
     COLUMN_NAME__
-    | TABLE_NAME__ dot__ COLUMN_NAME__
+    | TABLE_COLUMN_NAME { TABLE_NAME__ dot__ COLUMN_NAME__ }
 }
 TABLE {
     TABLE_NAME__
-    | TABLE_ALIAS { TABLE_NAME__ TABLE_NAME__ }?
+    | TABLE_ALIAS { TABLE_NAME__ TABLE_NAME__ }
 }
 COLUMN_NAME__ { identifier__ }
 TABLE_NAME__ { identifier__ }
