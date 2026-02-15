@@ -18,7 +18,8 @@ export const generateTypes = (grammar: string) => {
   const typescriptAst = typeInfos.map((t) => {
     if (t.childrenName.length === 0) return generateLeafNodeType(t)
     if (t.onlyHasSequence) return generateSequenceNodeType(t)
-    return generateChoiceNodeType(t)
+    if (t.onlyHasChoice) return generateChoiceNodeType(t)
+    return generateGenericNodeType(t)
   })
 
   const fileNode = ts.createSourceFile('', '', ts.ScriptTarget.Latest)
@@ -29,6 +30,35 @@ export const generateTypes = (grammar: string) => {
   )
   return tsContent
 }
+
+/**
+ * Create generic node type
+ *
+ * ```TypeScript
+ * export type NODE_NAME = {
+ *    name: 'NODE_NAME'
+ *    children: (NODE_1 | NODE_2)[]
+ * }
+ * ```
+ */
+const generateGenericNodeType = (typeInfo: TypeInfo) =>
+  nodeTypeBase(
+    typeInfo,
+    factory.createPropertySignature(
+      undefined,
+      factory.createIdentifier('children'),
+      undefined,
+      factory.createArrayTypeNode(
+        factory.createParenthesizedType(
+          factory.createUnionTypeNode(
+            typeInfo.childrenName.map((name) =>
+              factory.createTypeReferenceNode(factory.createIdentifier(name)),
+            ),
+          ),
+        ),
+      ),
+    ),
+  )
 
 /**
  * Create choice node type
@@ -47,15 +77,13 @@ const generateChoiceNodeType = (typeInfo: TypeInfo) =>
       undefined,
       factory.createIdentifier('children'),
       undefined,
-      factory.createArrayTypeNode(
-        factory.createParenthesizedType(
-          factory.createUnionTypeNode(
-            typeInfo.childrenName.map((name) =>
-              factory.createTypeReferenceNode(factory.createIdentifier(name)),
-            ),
+      factory.createTupleTypeNode([
+        factory.createUnionTypeNode(
+          typeInfo.childrenName.map((name) =>
+            factory.createTypeReferenceNode(factory.createIdentifier(name)),
           ),
         ),
-      ),
+      ]),
     ),
   )
 

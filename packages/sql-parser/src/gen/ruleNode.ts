@@ -29,6 +29,7 @@ export type TypeInfo = {
   name: string
   childrenName: string[]
   onlyHasSequence: boolean
+  onlyHasChoice: boolean
 }
 
 export const getTypeInfo = (ruleNode: SyntaxNode, slice: string) => {
@@ -41,17 +42,13 @@ export const getTypeInfo = (ruleNode: SyntaxNode, slice: string) => {
     name,
     childrenName: [],
     onlyHasSequence: true,
+    onlyHasChoice: true,
   }
   const bodyNodeSlice = getNodeString(bodyNode, slice)
 
-  const onlyHasSquenceFilter = [
-    'Sequence',
-    '{',
-    '}',
-    'InlineRule',
-    'RuleName',
-    'Body',
-  ]
+  const ignoreFilter = ['{', '}', 'InlineRule', 'RuleName', 'Body']
+  const onlyHasSquenceFilter = ['Sequence', ...ignoreFilter]
+  const onlyHasChoiceFilter = ['Choice', '|', ...ignoreFilter]
   bodyNode.node.toTree().iterate({
     enter(node) {
       if (
@@ -59,6 +56,9 @@ export const getTypeInfo = (ruleNode: SyntaxNode, slice: string) => {
         !node.name.includes('__')
       )
         typeInfo.onlyHasSequence = false
+
+      if (!onlyHasChoiceFilter.includes(node.name) && !node.name.includes('__'))
+        typeInfo.onlyHasChoice = false
 
       if (node.name === 'InlineRule') {
         const { name } = getRuleNameAndBody(node.node, bodyNodeSlice)
