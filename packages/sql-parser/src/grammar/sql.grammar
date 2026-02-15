@@ -12,7 +12,7 @@
     and @left,
     or @left,
     ON__,
-    TABLE_NAME
+    TABLE_NAME__
 }
 
 /*
@@ -40,18 +40,18 @@ SELECT {
     SELECT_EXPRESSION (comma__ SELECT_EXPRESSION)*
     EXCLUDE {
         EXCLUDE__ { @specialize<identifier__, 'EXCLUDE' | 'exclude'> }
-        COLUMN_NAME + (comma__ COLUMN_NAME)*
+        COLUMN_NAME__ + (comma__ COLUMN_NAME__)*
     }?
 }
 SELECT_EXPRESSION {
     SELECT_ALL { STAR__ }
-    | SELECT_TABLE { TABLE_NAME dot__ STAR__ }
+    | SELECT_TABLE { TABLE_NAME__ dot__ STAR__ }
     | SELECT_COLUMN { COLUMN }
     | SELECT_COLUMN_AS { COLUMN AS__ COLUMN_ALIAS }
     | SELECT_AGGREGATE { AGGREGATE }
     | SELECT_AGGREGATE_AS { AGGREGATE AS__ COLUMN_ALIAS }
 }
-COLUMN_ALIAS { COLUMN_NAME }
+COLUMN_ALIAS { COLUMN_NAME__ }
 
 /* FROM clause */
 FROM {
@@ -74,7 +74,7 @@ JOIN__ { @specialize<identifier__, 'JOIN' | 'join'> }
 JOIN_METHOD {
     USING {
         USING__ { @specialize<identifier__, 'USING' | 'using'> }
-        open_parenthesis__ COLUMN_NAME close_parenthesis__
+        open_parenthesis__ COLUMN_NAME__ close_parenthesis__
     }
     | ON {
         ON__ { @specialize<identifier__, 'ON' | 'on'> }
@@ -142,6 +142,7 @@ condition_base {
     | IS_NULL { COLUMN IS__ NULL__ }
     | LIKE { COLUMN LIKE__ STRING_LITERAL__ }
     | ILIKE { COLUMN ILIKE__ STRING_LITERAL__ }
+    | BETWEEN { COLUMN BETWEEN__ LITERAL_VALUE AND__ LITERAL_VALUE }
     | IN_ARRAY {
         COLUMN IN__
         ARRAY { open_parenthesis__ LITERAL_VALUE (comma__ LITERAL_VALUE)* close_parenthesis__ }
@@ -149,9 +150,9 @@ condition_base {
 }
 LIKE__ { @specialize<identifier__, 'LIKE' | 'like'> }
 ILIKE__ { @specialize<identifier__, 'ILIKE' | 'ilike'> }
+BETWEEN__ { @specialize<identifier__, 'BETWEEN' | 'between'> }
 IS__ { @specialize<identifier__, 'IS' | 'is'> }
 IN__ { @specialize<identifier__, 'IN' | 'in'> }
-BETWEEN__ { @specialize<identifier__, 'BETWEEN' | 'between'> }
 
 /* Expression */
 EXPRESSION { LITERAL_VALUE }
@@ -186,15 +187,15 @@ NULL__ { @specialize<identifier__, 'NULL' | 'null'> }
 
 /* Column and TABLE */
 COLUMN {
-    COLUMN_NAME
-    | TABLE_NAME dot__ COLUMN_NAME
+    COLUMN_NAME__
+    | TABLE_NAME__ dot__ COLUMN_NAME__
 }
 TABLE {
-    TABLE_NAME
-    | TABLE_ALIAS { TABLE_NAME TABLE_NAME }?
+    TABLE_NAME__
+    | TABLE_ALIAS { TABLE_NAME__ TABLE_NAME__ }?
 }
-COLUMN_NAME { identifier__ }
-TABLE_NAME { identifier__ }
+COLUMN_NAME__ { identifier__ }
+TABLE_NAME__ { identifier__ }
 
 /* Misc */
 ignore { MULTI_LINE_COMMENT__ }

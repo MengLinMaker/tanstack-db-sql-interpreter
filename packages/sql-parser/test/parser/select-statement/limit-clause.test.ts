@@ -1,11 +1,9 @@
 import { describe, it } from 'vitest'
-import { parser } from '../../../src/index.ts'
+import { strictParseSql } from '../../../src/index.ts'
 
 describe('LIMIT clause', () => {
-  const strictParser = parser.configure({ strict: true })
-
   it('Should parse limit', () => {
-    strictParser.parse(`
+    strictParseSql(`
       SELECT *
       FROM table1
       LIMIT 10
@@ -13,7 +11,7 @@ describe('LIMIT clause', () => {
   })
 
   it('Should parse limit + offset', () => {
-    strictParser.parse(`
+    strictParseSql(`
       SELECT *
       FROM table1
       LIMIT 10 OFFSET 10

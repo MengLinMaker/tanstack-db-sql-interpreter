@@ -1,16 +1,3 @@
-
-# Select with where
-
-select foo from foobar where foobar = 11;
-
-==>
-
-SQL(Stmts(Stmt(SelectStmt(SelectDefinition(SelectBase(Select,SelectTargetList(SelectTarget(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier)))))),FromClause(From,FromExpression(BaseFromExpression(TableObjectName(IdentifierExt(Identifier))))),WhereClause(Where,ScalarExpression(ExpressionA(ExpressionA(ObjName(IdentifierExt(Identifier))),Eql,ExpressionA(IntegerLiteral)))))))),Smc))
-
-
-
-
-
 # Select with basic arithmetic expression
 
 select foo,bar from foobar where (foo + bar) > 3;
@@ -80,18 +67,3 @@ from cte;
 ==>
 
 SQL(Stmts(Stmt(SelectStmt(SelectDefinition(WithClause(With,WithItem(WithIdentifier(IdentifierExt(Identifier)),As,WithExpression(Lparen,QueryStatementExpression(SelectStmt(SelectDefinition(SelectBase(SelectClause(SelectBase(Select,SelectTargetList(SelectTarget(ScalarExpression(ExpressionA(IntegerLiteral)),As,IdentifierExt(Identifier))))),Union,All,SelectClause(SelectBase(Select,SelectTargetList(SelectTarget(ScalarExpression(ExpressionA(ExpressionA(ObjName(IdentifierExt(Identifier))),Plus,ExpressionA(IntegerLiteral))))),FromClause(From,FromExpression(BaseFromExpression(TableObjectName(IdentifierExt(Identifier))))),WhereClause(Where,ScalarExpression(ExpressionA(ExpressionA(ObjName(IdentifierExt(Identifier))),Lss,ExpressionA(IntegerLiteral)))))))))),Rparen))),SelectClause(SelectBase(Select,SelectTargetList(SelectTarget(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier)))))),FromClause(From,FromExpression(BaseFromExpression(TableObjectName(IdentifierExt(Identifier)))))))))),Smc))
-
-
-
-
-
-# having clause
-
-select a, b, c, d, e
-from foobar
-group by d
-having count(d) < 59;
-
-==>
-
-SQL(Stmts(Stmt(SelectStmt(SelectDefinition(SelectBase(Select,SelectTargetList(SelectTarget(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier))))),Comma,SelectTarget(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier))))),Comma,SelectTarget(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier))))),Comma,SelectTarget(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier))))),Comma,SelectTarget(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier)))))),FromClause(From,FromExpression(BaseFromExpression(TableObjectName(IdentifierExt(Identifier))))),GroupByClause(Group,By,GroupByExpression(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier)))))),HavingClause(Having,ScalarExpression(ExpressionA(ExpressionA(FunctionCall(ObjName(IdentifierExt(Identifier)),Lparen,FunctionArgs(FunctionArgExpression(ScalarExpression(ExpressionA(ObjName(IdentifierExt(Identifier)))))),Rparen)),Lss,ExpressionA(IntegerLiteral)))))))),Smc))

@@ -1,11 +1,9 @@
 import { describe, it } from 'vitest'
-import { parser } from '../../../src/index.ts'
+import { strictParseSql } from '../../../src/index.ts'
 
 describe('ORDER clause', () => {
-  const strictParser = parser.configure({ strict: true })
-
   it('Should parse order row', () => {
-    strictParser.parse(`
+    strictParseSql(`
       SELECT *
       FROM table
       ORDER BY id
@@ -13,7 +11,7 @@ describe('ORDER clause', () => {
   })
 
   it('Should parse order table.row', () => {
-    strictParser.parse(`
+    strictParseSql(`
       SELECT *
       FROM table
       ORDER BY id
@@ -21,7 +19,7 @@ describe('ORDER clause', () => {
   })
 
   it('Should parse order ASC', () => {
-    strictParser.parse(`
+    strictParseSql(`
       SELECT *
       FROM table
       ORDER BY id ASC
@@ -29,7 +27,7 @@ describe('ORDER clause', () => {
   })
 
   it('Should parse order DESC', () => {
-    strictParser.parse(`
+    strictParseSql(`
       SELECT *
       FROM table
       ORDER BY id DESC
@@ -37,7 +35,7 @@ describe('ORDER clause', () => {
   })
 
   it('Should parse multiple', () => {
-    strictParser.parse(`
+    strictParseSql(`
       SELECT *
       FROM table
       ORDER BY row1, row2 ASC, row3 DESC

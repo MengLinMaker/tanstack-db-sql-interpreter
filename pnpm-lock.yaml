@@ -44,9 +44,25 @@ importers:
 
   packages/sql-parser:
     dependencies:
-      node-sql-parser:
-        specifier: ^5.4.0
-        version: 5.4.0
+      '@lezer/common':
+        specifier: ^1.5.1
+        version: 1.5.1
+      '@lezer/lr':
+        specifier: ^1.4.8
+        version: 1.4.8
+    devDependencies:
+      '@lezer/generator':
+        specifier: ^1.8.0
+        version: 1.8.0
+      '@lezer/lezer':
+        specifier: ^1.1.2
+        version: 1.1.2
+      rollup:
+        specifier: ^4.57.1
+        version: 4.57.1
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
 
   packages/sql-parser-sample:
     dependencies:
@@ -502,6 +518,12 @@ packages:
   '@lezer/generator@1.8.0':
     resolution: {integrity: sha512-/SF4EDWowPqV1jOgoGSGTIFsE7Ezdr7ZYxyihl5eMKVO5tlnpIhFcDavgm1hHY5GEonoOAEnJ0CU0x+tvuAuUg==}
     hasBin: true
+
+  '@lezer/highlight@1.2.3':
+    resolution: {integrity: sha512-qXdH7UqTvGfdVBINrgKhDsVTJTxactNNxLk7+UMwZhU13lMHaOBlJe9Vqp907ya56Y3+ed2tlqzys7jDkTmW0g==}
+
+  '@lezer/lezer@1.1.2':
+    resolution: {integrity: sha512-O8yw3CxPhzYHB1hvwbdozjnAslhhR8A5BH7vfEMof0xk3p+/DFDfZkA9Tde6J+88WgtwaHy4Sy6ThZSkaI0Evw==}
 
   '@lezer/lr@1.4.8':
     resolution: {integrity: sha512-bPWa0Pgx69ylNlMlPvBPryqeLYQjyJjqPx+Aupm5zydLIF3NE+6MMLT8Yi23Bd9cif9VS00aUebn+6fDIGBcDA==}
@@ -1939,6 +1961,15 @@ snapshots:
   '@lezer/generator@1.8.0':
     dependencies:
       '@lezer/common': 1.5.1
+      '@lezer/lr': 1.4.8
+
+  '@lezer/highlight@1.2.3':
+    dependencies:
+      '@lezer/common': 1.5.1
+
+  '@lezer/lezer@1.1.2':
+    dependencies:
+      '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.8
 
   '@lezer/lr@1.4.8':
