@@ -16,11 +16,9 @@ export const getRuleNameAndBody = (
   ruleDeclarationNode: SyntaxNode,
   doc: string,
 ) => {
-  // biome-ignore lint/style/noNonNullAssertion: <definitely not null>
   const node = ruleDeclarationNode.getChild('RuleName')!
   return {
     name: getNodeString(node, doc),
-    // biome-ignore lint/style/noNonNullAssertion: <definitely not null>
     bodyNode: ruleDeclarationNode.getChild('Body')!,
   }
 }

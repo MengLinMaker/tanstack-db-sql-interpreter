@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test:lint": "biome lint --write",
-    "test:type": "tsgo --ignoreConfig --noEmit --allowImportingTsExtensions --module esnext ./**/*.ts",
+    "test:type": "tsgo",
     "test:unit": "vitest run --coverage",
     "build": "node ./src/gen.ts"
   },

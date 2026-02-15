@@ -1,5 +1,6 @@
-import type { SQL } from './../../dist/treeType'
 import type { Tree, TreeCursor } from '@lezer/common'
+import { parser } from '../../dist/parser'
+import type { SQL } from './../../dist/treeType'
 
 type Node = {
   name: string
@@ -22,7 +23,7 @@ const hasChildren = (cursor: TreeCursor) => {
  * @param {string} inputText The original input string.
  * @returns {object} The custom tree structure.
  */
-export const transformTree = (tree: Tree, inputText: string) => {
+const transformTree = (tree: Tree, inputText: string) => {
   // Manage navigation
   const stack: Node[] = []
   let rootNode: Node = null as never
@@ -39,7 +40,6 @@ export const transformTree = (tree: Tree, inputText: string) => {
       if (stack.length === 0) {
         rootNode = newNode
       } else {
-        // biome-ignore lint/style/noNonNullAssertion: <length>
         stack[stack.length - 1]!.children.push(newNode)
       }
       stack.push(newNode)
@@ -48,4 +48,12 @@ export const transformTree = (tree: Tree, inputText: string) => {
   })
 
   return rootNode as SQL
+}
+
+export const strictParseSql = (sql: string) => {
+  const strictParser = parser.configure({ strict: true })
+  const tree = strictParser.parse(sql)
+
+  const ast = transformTree(tree, sql)
+  return ast
 }
