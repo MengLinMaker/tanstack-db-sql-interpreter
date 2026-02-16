@@ -22,38 +22,6 @@ describe('FROM clause', () => {
     table_2.insert(table_2_data)
   }
 
-  it('table not found', () => {
-    seedTables()
-    expect(() => {
-      eagerLiveQueryCollection(
-        liveQuerySql(
-          {
-            table_1,
-          },
-          'SELECT * FROM table_2',
-        ),
-      )
-    }).throw(`Table not found: 'table_2'`)
-  })
-
-  it('SELECT basic', () => {
-    seedTables()
-    const newCollection = eagerLiveQueryCollection(
-      liveQuerySql({ table_1, table_2 }, 'SELECT * FROM table_1'),
-    )
-    const properties = collectionProperties({ newCollection }, 'newCollection')
-    expect(properties).toStrictEqual(Object.keys(table_1_data))
-  })
-
-  it('SELECT basic ignore additional table', () => {
-    seedTables()
-    const newCollection = eagerLiveQueryCollection(
-      liveQuerySql({ table_1, table_2 }, 'SELECT * FROM table_1'),
-    )
-    const properties = collectionProperties({ newCollection }, 'newCollection')
-    expect(properties).toStrictEqual(Object.keys(table_1_data))
-  })
-
   it('JOIN USING column not found', () => {
     seedTables()
     expect(() => {

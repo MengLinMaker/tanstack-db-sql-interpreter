@@ -5,13 +5,15 @@ import {
   type InitialQueryBuilder,
   type QueryBuilder,
 } from '@tanstack/db'
-import { defaultSwitchNodeError, LiveQuerySqlError } from '../error'
+import { defaultSwitchNodeError } from '../error'
 import {
-  collectionProperties,
+  columnNotFoundCheck,
+  findColumnFromTables,
   singleCollectionsFilter,
 } from '../helpers/collection.ts'
 import { stringifyObject } from '../helpers/print.ts'
 import type { Collections } from '../types.ts'
+import { columnNode } from './common.ts'
 
 export const fromNode = (
   node: Node.FROM,
@@ -152,58 +154,4 @@ const joinMethodNode = (
     default:
       throw defaultSwitchNodeError(n)
   }
-}
-
-const columnNode = (node: Node.COLUMN, collections: Collections) => {
-  const n = node.children[0]
-  switch (n.name) {
-    case 'COLUMN_NAME__': {
-      const column = n.value
-      return findColumnFromTables(collections, column)
-    }
-    case 'TABLE_COLUMN_NAME': {
-      const table = n.children[0].value
-      const column = n.children[1].value
-      columnNotFoundCheck(collections, table, column)
-      return { table, column }
-    }
-    default:
-      throw defaultSwitchNodeError(n)
-  }
-}
-
-const findColumnFromTables = (collections: Collections, column: string) => {
-  const tableNames = Object.keys(collections)
-  for (const table of tableNames) {
-    const properties = collectionProperties(collections, table)
-    if (properties.includes(column)) return { table, column }
-  }
-  throw new LiveQuerySqlError(
-    `Cannot find column '${column}' in tables: '${tableNames.join(`', '`)}'`,
-  )
-}
-
-const columnNotFoundCheck = (
-  collections: Collections,
-  table:
-    | {
-        name: string
-        alias: string
-      }
-    | string,
-  columnName: string,
-) => {
-  if (typeof table === 'string') {
-    const properties = collectionProperties(collections, table)
-    const hasProperty = properties.includes(columnName)
-    if (!hasProperty)
-      throw new LiveQuerySqlError(`Column not found: '${table}.${columnName}'`)
-    return
-  }
-  const properties = collectionProperties(collections, table.name)
-  const hasProperty = properties.includes(columnName)
-  if (!hasProperty)
-    throw new LiveQuerySqlError(
-      `Column not found: '${table.alias}.${columnName}'`,
-    )
 }

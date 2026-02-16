@@ -31,3 +31,42 @@ export const collectionProperties = (
   const singleDataPoint = collection.entries().next().value[1]
   return Object.keys(singleDataPoint)
 }
+
+export const findColumnFromTables = (
+  collections: Collections,
+  column: string,
+) => {
+  const tableNames = Object.keys(collections)
+  for (const table of tableNames) {
+    const properties = collectionProperties(collections, table)
+    if (properties.includes(column)) return { table, column }
+  }
+  throw new LiveQuerySqlError(
+    `Cannot find column '${column}' in tables: '${tableNames.join(`', '`)}'`,
+  )
+}
+
+export const columnNotFoundCheck = (
+  collections: Collections,
+  table:
+    | {
+        name: string
+        alias: string
+      }
+    | string,
+  columnName: string,
+) => {
+  if (typeof table === 'string') {
+    const properties = collectionProperties(collections, table)
+    const hasProperty = properties.includes(columnName)
+    if (!hasProperty)
+      throw new LiveQuerySqlError(`Column not found: '${table}.${columnName}'`)
+    return
+  }
+  const properties = collectionProperties(collections, table.name)
+  const hasProperty = properties.includes(columnName)
+  if (!hasProperty)
+    throw new LiveQuerySqlError(
+      `Column not found: '${table.alias}.${columnName}'`,
+    )
+}
