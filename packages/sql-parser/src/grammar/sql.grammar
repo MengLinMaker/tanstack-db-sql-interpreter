@@ -26,11 +26,13 @@
 SELECT_STATEMENT {
     SELECT
     FROM
-    WHERE?
-    GROUP?
-    HAVING?
-    ORDER?
-    LIMIT?
+    SELECT_STATEMENT_OPTIONALS {
+        WHERE?
+        GROUP?
+        HAVING?
+        ORDER?
+        LIMIT?
+    }
 }
 
 /* SELECT clause */
@@ -48,7 +50,7 @@ SELECT_EXPRESSION {
     | SELECT_TABLE { TABLE_NAME__ dot__ STAR__ }
     | SELECT_COLUMN { COLUMN }
     | SELECT_COLUMN_AS { COLUMN AS__ COLUMN_ALIAS }
-    | SELECT_AGGREGATE { AGGREGATE }
+    | AGGREGATE
     | SELECT_AGGREGATE_AS { AGGREGATE AS__ COLUMN_ALIAS }
 }
 COLUMN_ALIAS { COLUMN_NAME__ }
@@ -119,7 +121,7 @@ OFFSET_EXPRESSION { OFFSET__ { @specialize<identifier__, 'OFFSET' | 'offset'> } 
 
 /* Condition expression */
 CONDITION_EXPRESSION {
-    condition_base
+    CONDITION_BASE
     | open_parenthesis__ CONDITION_EXPRESSION close_parenthesis__
     | AND { CONDITION_EXPRESSION !and AND__ CONDITION_EXPRESSION }
     | OR { CONDITION_EXPRESSION !or OR__ CONDITION_EXPRESSION }
@@ -128,7 +130,7 @@ CONDITION_EXPRESSION {
 AND__ { @specialize<identifier__, 'AND' | 'and'> }
 OR__ { @specialize<identifier__, 'OR' | 'or'> }
 NOT__ { @specialize<identifier__, 'NOT' | 'not'> }
-condition_base {
+CONDITION_BASE {
     EQ { COLUMN EQUAL__ EXPRESSION }
     | NOT_EQ { COLUMN NOT_EQ__ EXPRESSION }
     | GT { COLUMN GT__ EXPRESSION }
