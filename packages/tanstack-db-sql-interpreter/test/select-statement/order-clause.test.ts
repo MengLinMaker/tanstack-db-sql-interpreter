@@ -5,11 +5,12 @@ import { eagerLiveQueryCollection, testCollectionFactory } from '../helper.ts'
 describe('ORDER clause', () => {
   const table_1 = testCollectionFactory()
   const seedTables = () => {
-    const insert = (n: number) => table_1.insert({
-      id: n,
-      a: Math.floor(n / 2),
-      b: Math.floor(n / 3)
-    })
+    const insert = (n: number) =>
+      table_1.insert({
+        id: n,
+        a: Math.floor(n / 2),
+        b: Math.floor(n / 3),
+      })
     for (let i = 0; i < 6; i++) insert(i)
   }
 
