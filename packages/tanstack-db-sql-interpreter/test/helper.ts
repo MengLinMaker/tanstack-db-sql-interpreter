@@ -1,12 +1,14 @@
 import {
-  Context,
+  type Context,
   createCollection,
-  InitialQueryBuilder,
+  type InitialQueryBuilder,
   liveQueryCollectionOptions,
   type QueryBuilder,
 } from '@tanstack/db'
 
-export const eagerLiveQueryCollection = (query: (q: InitialQueryBuilder) => QueryBuilder<Context>) =>
+export const eagerLiveQueryCollection = (
+  query: (q: InitialQueryBuilder) => QueryBuilder<Context>,
+) =>
   createCollection(
     liveQueryCollectionOptions({
       query,
@@ -17,9 +19,9 @@ export const eagerLiveQueryCollection = (query: (q: InitialQueryBuilder) => Quer
 export const testCollectionFactory = () =>
   createCollection({
     sync: {
-      sync: () => { },
+      sync: () => {},
     },
-    onInsert: async () => { },
+    onInsert: async () => {},
     // @ts-expect-error just for make queries work
     getKey: (q) => q.id,
   })
