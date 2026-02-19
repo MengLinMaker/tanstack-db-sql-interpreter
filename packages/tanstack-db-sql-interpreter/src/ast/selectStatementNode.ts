@@ -25,8 +25,12 @@ export const selectStatementNode = (
         case 'GROUP': {
           const columns = groupNode(n, collections)
           q = q.groupBy((c) => columns.map((col) => c[col.table]![col.column]))
-          const columnsPrint = columns.map(col => `c.${col.table}.${col.column}`)
-          console.debug(` .groupBy(c => ${JSON.stringify(columnsPrint, null, 2).replaceAll('"', '').replaceAll('\n', '\n ')})`)
+          const columnsPrint = columns.map(
+            (col) => `c.${col.table}.${col.column}`,
+          )
+          console.debug(
+            ` .groupBy(c => ${JSON.stringify(columnsPrint, null, 2).replaceAll('"', '').replaceAll('\n', '\n ')})`,
+          )
           break
         }
         case 'HAVING':
