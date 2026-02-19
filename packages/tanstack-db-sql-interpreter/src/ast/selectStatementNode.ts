@@ -3,6 +3,7 @@ import type { Context, InitialQueryBuilder, QueryBuilder } from '@tanstack/db'
 import { defaultSwitchNodeError } from '../error'
 import type { Collections } from '../types'
 import { fromNode } from './fromClause'
+import { groupNode } from './groupClause'
 import { limitNode } from './limitClause'
 import { orderNode } from './orderClause'
 import { selectNode } from './selectClause'
@@ -21,8 +22,13 @@ export const selectStatementNode = (
       switch (n.name) {
         case 'WHERE':
           break
-        case 'GROUP':
+        case 'GROUP': {
+          const columns = groupNode(n, collections)
+          q = q.groupBy((c) => columns.map((col) => c[col.table]![col.column]))
+          const columnsPrint = columns.map(col => `c.${col.table}.${col.column}`)
+          console.debug(` .groupBy(c => ${JSON.stringify(columnsPrint, null, 2).replaceAll('"', '').replaceAll('\n', '\n ')})`)
           break
+        }
         case 'HAVING':
           break
         case 'ORDER': {
