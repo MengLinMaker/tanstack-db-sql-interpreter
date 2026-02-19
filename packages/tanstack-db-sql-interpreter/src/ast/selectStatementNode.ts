@@ -1,6 +1,7 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import type { Context, InitialQueryBuilder, QueryBuilder } from '@tanstack/db'
+import type { InitialQueryBuilder } from '@tanstack/db'
 import { defaultSwitchNodeError } from '../error'
+import { stringifyObjectMulti } from '../helpers/print'
 import type { Collections } from '../types'
 import { fromNode } from './fromClause'
 import { groupNode } from './groupClause'
@@ -28,9 +29,7 @@ export const selectStatementNode = (
           const columnsPrint = columns.map(
             (col) => `c.${col.table}.${col.column}`,
           )
-          console.debug(
-            ` .groupBy(c => ${JSON.stringify(columnsPrint, null, 2).replaceAll('"', '').replaceAll('\n', '\n ')})`,
-          )
+          console.debug(` .groupBy(c => ${stringifyObjectMulti(columnsPrint)})`)
           break
         }
         case 'HAVING':

@@ -5,3 +5,6 @@ export const stringifyObject = (obj: object) =>
     .replaceAll('}', ' }')
     .replaceAll(',', ', ')
     .replaceAll(':', ': ')
+
+export const stringifyObjectMulti = (obj: object) =>
+  JSON.stringify(obj, null, 2).replaceAll('"', '').replaceAll('\n', '\n ')
