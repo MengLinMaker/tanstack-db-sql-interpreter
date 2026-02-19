@@ -4,7 +4,7 @@ import { strictParseSql } from '../../../src/index.ts'
 describe('HAVING clause', () => {
   it('Should parse basic having', () => {
     strictParseSql(`
-      SELECT COUNT(*)
+      SELECT COUNT(*) AS c
       FROM table
       GROUP BY row
       HAVING row >= 10
@@ -13,7 +13,7 @@ describe('HAVING clause', () => {
 
   it('Should parse condition expression', () => {
     strictParseSql(`
-      SELECT COUNT(*)
+      SELECT COUNT(*) AS c
       FROM table
       GROUP BY row
       HAVING row >= 10 AND row <= 100
