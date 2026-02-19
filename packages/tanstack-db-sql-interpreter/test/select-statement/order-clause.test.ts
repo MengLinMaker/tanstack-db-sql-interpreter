@@ -83,7 +83,6 @@ describe('ORDER clause', () => {
          ORDER BY b DESC, a DESC, id DESC`,
       ),
     )
-    console.log(newCollection.toArray)
     expect(newCollection.toArray).toStrictEqual(table_1.toArray.reverse())
   })
 })
