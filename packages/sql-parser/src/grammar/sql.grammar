@@ -9,10 +9,7 @@
 }
 @skip { whitespace__ }
 @precedence {
-    and @left,
-    or @left,
-    ON__,
-    TABLE_NAME__
+    operator @left
 }
 
 /*
@@ -83,7 +80,7 @@ JOIN_METHOD {
 /* WHERE clause */
 WHERE {
     WHERE__ { @specialize<identifier__, 'WHERE' | 'where'> }
-    CONDITION_EXPRESSION
+    EXPRESSION
 }
 
 /* GROUP clause */
@@ -95,7 +92,7 @@ GROUP {
 /* HAVING clause */
 HAVING {
     HAVING__ { @specialize<identifier__, 'HAVING' | 'having'> }
-    CONDITION_EXPRESSION
+    EXPRESSION
 }
 
 /* ORDER clause */
@@ -122,56 +119,54 @@ OFFSET__ { @specialize<identifier__, 'OFFSET' | 'offset'> }
  * Shared grammar
  */
 
-/* Condition expression */
-CONDITION_EXPRESSION {
-    CONDITION_BASE
-    | open_parenthesis__ CONDITION_EXPRESSION close_parenthesis__
-    | AND { CONDITION_EXPRESSION !and AND__ CONDITION_EXPRESSION }
-    | OR { CONDITION_EXPRESSION !or OR__ CONDITION_EXPRESSION }
-    | NOT { NOT__ CONDITION_EXPRESSION }
-}
-AND__ { @specialize<identifier__, 'AND' | 'and'> }
-OR__ { @specialize<identifier__, 'OR' | 'or'> }
-NOT__ { @specialize<identifier__, 'NOT' | 'not'> }
-CONDITION_BASE {
-    EQ { COLUMN EQUAL__ EXPRESSION }
-    | NOT_EQ { COLUMN NOT_EQ__ EXPRESSION }
-    | GT { COLUMN GT__ EXPRESSION }
-    | GTE { COLUMN GTE__ EXPRESSION }
-    | LT { COLUMN LT__ EXPRESSION }
-    | LTE { COLUMN LTE__ EXPRESSION }
-    | IS_NULL { COLUMN IS__ NULL__ }
-    | LIKE { COLUMN LIKE__ STRING_LITERAL__ }
-    | ILIKE { COLUMN ILIKE__ STRING_LITERAL__ }
-    | BETWEEN { COLUMN BETWEEN__ LITERAL_VALUE AND__ LITERAL_VALUE }
-    | IN_ARRAY {
-        COLUMN IN__
-        ARRAY { open_parenthesis__ LITERAL_VALUE (comma__ LITERAL_VALUE)* close_parenthesis__ }
-    }
-}
-LIKE__ { @specialize<identifier__, 'LIKE' | 'like'> }
-ILIKE__ { @specialize<identifier__, 'ILIKE' | 'ilike'> }
-BETWEEN__ { @specialize<identifier__, 'BETWEEN' | 'between'> }
-IS__ { @specialize<identifier__, 'IS' | 'is'> }
-IN__ { @specialize<identifier__, 'IN' | 'in'> }
-
 /* Expression */
-EXPRESSION { LITERAL_VALUE }
+EXPRESSION {
+    open_parenthesis__ EXPRESSION close_parenthesis__
+    | FUNC_SINGLE
+    | FUNC_MANY
+    | OPERATOR
+    // | IN_ARRAY
+    // | BETWEEN
+    | LITERAL_VALUE
+    | COLUMN
+}
+FUNC_SINGLE {
+    UPPER { UPPER__ { @specialize<identifier__, 'UPPER' | 'upper'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }
+    | LOWER { LOWER__ { @specialize<identifier__, 'LOWER' | 'lower'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }
+    | LENGTH { LENGTH__ { @specialize<identifier__, 'LENGTH' | 'length'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }
+    | NOT { NOT__ { @specialize<identifier__, 'NOT' | 'not'> } EXPRESSION }
+}
+FUNC_MANY {
+    CONCAT { CONCAT__ { @specialize<identifier__, 'CONCAT' | 'concat'> } ARRAY }
+}
+OPERATOR {
+    EQ { EXPRESSION !operator EQUAL__ EXPRESSION }
+    | NOT_EQ { EXPRESSION !operator NOT_EQ__ EXPRESSION }
+    | GT { EXPRESSION !operator GT__ EXPRESSION }
+    | GTE { EXPRESSION !operator GTE__ EXPRESSION }
+    | LT { EXPRESSION !operator LT__ EXPRESSION }
+    | LTE { EXPRESSION !operator LTE__ EXPRESSION }
+    | IS { EXPRESSION !operator IS__ { @specialize<identifier__, 'IS' | 'is'> } EXPRESSION }
+    | AND { EXPRESSION !operator AND__ EXPRESSION }
+    | OR { EXPRESSION !operator OR__ { @specialize<identifier__, 'OR' | 'or'> } EXPRESSION }
+    | LIKE { EXPRESSION !operator LIKE__ { @specialize<identifier__, 'LIKE' | 'like'> } EXPRESSION }
+    | ILIKE { EXPRESSION !operator ILIKE__ { @specialize<identifier__, 'ILIKE' | 'ilike'> } EXPRESSION }
+}
+BETWEEN { EXPRESSION BETWEEN__ { @specialize<identifier__, 'BETWEEN' | 'between'> } EXPRESSION AND__ EXPRESSION }
+IN_ARRAY { EXPRESSION IN__ { @specialize<identifier__, 'IN' | 'in'> } ARRAY }
+ARRAY { open_parenthesis__ EXPRESSION (comma__ EXPRESSION)* close_parenthesis__ }
+AND__ { @specialize<identifier__, 'AND' | 'and'> }
 
 /* Aggregate */
 AGGREGATE {
     COUNT { COUNT__ open_parenthesis__ COLUMN close_parenthesis__ }
+    | SUM { SUM__ { @specialize<identifier__, 'SUM'> } open_parenthesis__ COLUMN close_parenthesis__ }
+    | AVG { AVG__ { @specialize<identifier__, 'AVG'> } open_parenthesis__ COLUMN close_parenthesis__ }
+    | MIN { MIN__ { @specialize<identifier__, 'MIN'> } open_parenthesis__ COLUMN close_parenthesis__ }
+    | MAX { MAX__ { @specialize<identifier__, 'MAX'> } open_parenthesis__ COLUMN close_parenthesis__ }
     | COUNT_ALL { COUNT__ open_parenthesis__ STAR__ close_parenthesis__ }
-    | SUM { SUM__ open_parenthesis__ COLUMN close_parenthesis__ }
-    | AVG { AVG__ open_parenthesis__ COLUMN close_parenthesis__ }
-    | MIN { MIN__ open_parenthesis__ COLUMN close_parenthesis__ }
-    | MAX { MAX__ open_parenthesis__ COLUMN close_parenthesis__ }
 }
 COUNT__ { @specialize<identifier__, 'COUNT'> }
-SUM__ { @specialize<identifier__, 'SUM'> }
-AVG__ { @specialize<identifier__, 'AVG'> }
-MIN__ { @specialize<identifier__, 'MIN'> }
-MAX__ { @specialize<identifier__, 'MAX'> }
 
 /* Literal */
 LITERAL_VALUE {
