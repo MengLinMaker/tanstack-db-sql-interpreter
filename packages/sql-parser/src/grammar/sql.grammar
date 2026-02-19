@@ -118,16 +118,16 @@ OFFSET__ { @specialize<identifier__, 'OFFSET' | 'offset'> }
 
 /* Expression */
 EXPRESSION {
-    open_parenthesis__ EXPRESSION close_parenthesis__
+    PARENTHESIS_EXPRESSION { open_parenthesis__ EXPRESSION close_parenthesis__ }
     | FUNC_SINGLE
     | FUNC_MANY
     | OPERATOR
-    // | IN_ARRAY
-    // | BETWEEN
     | COUNT_ALL { COUNT__ open_parenthesis__ STAR__ close_parenthesis__ }
     | LITERAL_VALUE
     | COLUMN
 }
+// | IN_ARRAY
+// | BETWEEN
 FUNC_SINGLE {
     UPPER { UPPER__ { @specialize<identifier__, 'UPPER' | 'upper'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }
     | LOWER { LOWER__ { @specialize<identifier__, 'LOWER' | 'lower'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }

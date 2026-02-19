@@ -49,6 +49,8 @@ export const getTypeInfo = (ruleNode: SyntaxNode, slice: string) => {
   const onlyHasChoiceFilter = ['Choice', '|', ...ignoreFilter]
   bodyNode.node.toTree().iterate({
     enter(node) {
+      if (node.name === 'PrecedenceMarker') return false
+
       if (
         !onlyHasSquenceFilter.includes(node.name) &&
         !node.name.includes('__')
