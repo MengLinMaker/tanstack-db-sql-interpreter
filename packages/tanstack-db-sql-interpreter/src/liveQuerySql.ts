@@ -1,6 +1,6 @@
 import { strictParseSql } from '@menglinmaker/sql-parser'
-import type { Context, QueryBuilder } from '@tanstack/db'
 import { selectStatementNode } from './ast/selectStatementNode'
+import { LiveQuerySqlError } from './error'
 import type { Collections } from './types'
 
 export const liveQuerySql = (collections: Collections, sql: string) => {
@@ -8,7 +8,5 @@ export const liveQuerySql = (collections: Collections, sql: string) => {
   if (ast.children[0]!.name === 'SELECT_STATEMENT') {
     return selectStatementNode(ast.children[0]!, collections)
   }
-
-  const queryBuilder = undefined
-  return queryBuilder as never as QueryBuilder<Context>
+  throw new LiveQuerySqlError('Cannot find CTE or SELECT statement')
 }

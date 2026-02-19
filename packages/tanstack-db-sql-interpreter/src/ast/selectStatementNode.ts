@@ -28,8 +28,10 @@ export const selectStatementNode = (
         case 'ORDER': {
           const columns = orderNode(n, collections)
           for (const col of columns) {
-            q = q.orderBy(c => c[col.table]![col.column], col.type)
-            console.debug(` .orderBy(c => c.${col.table}.${col.column}, '${col.type}')`)
+            q = q.orderBy((c) => c[col.table]![col.column], col.type)
+            console.debug(
+              ` .orderBy(c => c.${col.table}.${col.column}, '${col.type}')`,
+            )
           }
           break
         }
@@ -47,5 +49,5 @@ export const selectStatementNode = (
     }
     return q
   }
-  return queryBuilder as never as QueryBuilder<Context>
+  return queryBuilder
 }
