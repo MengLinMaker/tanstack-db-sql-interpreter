@@ -111,9 +111,12 @@ ORDER_EXPRESSION {
 }
 
 /* LIMIT clause */
-LIMIT { LIMIT_EXPRESSION OFFSET_EXPRESSION? }
-LIMIT_EXPRESSION { LIMIT__ { @specialize<identifier__, 'LIMIT' | 'limit'> } NUMERIC_LITERAL__ }
-OFFSET_EXPRESSION { OFFSET__ { @specialize<identifier__, 'OFFSET' | 'offset'> } NUMERIC_LITERAL__ }
+LIMIT { 
+    LIMIT_EXPRESSION { LIMIT__ NUMERIC_LITERAL__ }
+    | OFFSET { LIMIT__ NUMERIC_LITERAL__ OFFSET__  NUMERIC_LITERAL__ }
+}
+LIMIT__ { @specialize<identifier__, 'LIMIT' | 'limit'> }
+OFFSET__ { @specialize<identifier__, 'OFFSET' | 'offset'> }
 
 /*
  * Shared grammar

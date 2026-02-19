@@ -47,7 +47,7 @@ const transformTree = (tree: Tree, inputText: string) => {
     leave: (_n) => stack.pop(),
   })
 
-  return rootNode as SQL
+  return rootNode as never as SQL
 }
 
 export const strictParseSql = (sql: string) => {
