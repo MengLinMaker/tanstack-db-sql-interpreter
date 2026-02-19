@@ -6,12 +6,12 @@ export const limitNode = (node: Node.LIMIT) => {
   switch (n.name) {
     case 'LIMIT_EXPRESSION':
       return {
-        limit: Number(n.children[1]),
+        limit: Number(n.children[1].value),
       }
     case 'OFFSET':
       return {
-        limit: Number(n.children[1]),
-        offset: Number(n.children[1]),
+        limit: Number(n.children[1].value),
+        offset: Number(n.children[3].value),
       }
     default:
       throw defaultSwitchNodeError(n)

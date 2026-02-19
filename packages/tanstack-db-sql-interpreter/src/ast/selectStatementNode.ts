@@ -3,8 +3,9 @@ import type { Context, InitialQueryBuilder, QueryBuilder } from '@tanstack/db'
 import { defaultSwitchNodeError } from '../error'
 import type { Collections } from '../types'
 import { fromNode } from './fromClause'
-import { selectNode } from './selectClause'
 import { limitNode } from './limitClause'
+import { orderNode } from './orderClause'
+import { selectNode } from './selectClause'
 
 export const selectStatementNode = (
   node: Node.SELECT_STATEMENT,
@@ -24,8 +25,14 @@ export const selectStatementNode = (
           break
         case 'HAVING':
           break
-        case 'ORDER':
+        case 'ORDER': {
+          const columns = orderNode(n, collections)
+          for (const col of columns) {
+            q = q.orderBy(c => c[col.table]![col.column], col.type)
+            console.debug(` .orderBy(c => c.${col.table}.${col.column}, '${col.type}')`)
+          }
           break
+        }
         case 'LIMIT': {
           const { limit, offset } = limitNode(n)
           q = q.limit(limit)

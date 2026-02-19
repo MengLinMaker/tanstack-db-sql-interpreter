@@ -101,10 +101,9 @@ ORDER {
     BY__ ORDER_EXPRESSION (comma__ ORDER_EXPRESSION)*
 }
 ORDER_EXPRESSION {
-    COLUMN (
-        ASC__ { @specialize<identifier__, 'ASC' | 'asc'> }
-        | DESC__ { @specialize<identifier__, 'DESC' | 'desc'> }
-    )?
+    ORDER_COLUMN { COLUMN }
+    | ORDER_ASC { COLUMN ASC__ { @specialize<identifier__, 'ASC' | 'asc'> } }
+    | ORDER_DESC { COLUMN DESC__ { @specialize<identifier__, 'DESC' | 'desc'> } }
 }
 
 /* LIMIT clause */
