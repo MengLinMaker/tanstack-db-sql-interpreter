@@ -154,6 +154,7 @@ OPERATOR {
     | OR { EXPRESSION !operator OR__ { @specialize<identifier__, 'OR' | 'or'> } EXPRESSION }
     | LIKE { EXPRESSION !operator LIKE__ { @specialize<identifier__, 'LIKE' | 'like'> } EXPRESSION }
     | ILIKE { EXPRESSION !operator ILIKE__ { @specialize<identifier__, 'ILIKE' | 'ilike'> } EXPRESSION }
+    | PLUS { EXPRESSION !operator PLUS__ EXPRESSION }
 }
 BETWEEN { EXPRESSION BETWEEN__ { @specialize<identifier__, 'BETWEEN' | 'between'> } EXPRESSION AND__ EXPRESSION }
 IN_ARRAY { EXPRESSION IN__ { @specialize<identifier__, 'IN' | 'in'> } ARRAY }
@@ -203,7 +204,6 @@ BY__ { @specialize<identifier__, 'BY' | 'by'> }
     /* Misc */
     dot__ { '.' }
     STAR__ { '*' }
-    // PIPE__ { '||' }
 
     /* Syntax */
     open_parenthesis__ { '(' }
@@ -211,11 +211,11 @@ BY__ { @specialize<identifier__, 'BY' | 'by'> }
     comma__ { ',' }
     semicolon__ { ';' }
 
-    // /* Arithmetic operator */
-    // // PLUS__ { '+' }
-    // // MINUS__ { '-' }
-    // // DIVISION__ { '/' }
-    // // MODULUS__ { '%' }
+    /* Arithmetic operator */
+    PLUS__ { '+' }
+    // MINUS__ { '-' }
+    // DIVISION__ { '/' }
+    // MODULUS__ { '%' }
 
     // /* Comparison operator */
     EQUAL__ { '=' }

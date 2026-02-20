@@ -25,4 +25,17 @@ describe('GROUP clause', () => {
     )
     expect(newCollection.toArray).toStrictEqual(table_1.toArray)
   })
+
+  it('single column aggregate', () => {
+    seedTables()
+    const newCollection = eagerLiveQueryCollection(
+      liveQuerySql(
+        { table_1 },
+        `SELECT id, AVG(a) as a, AVG(b) as b
+         FROM table_1
+         GROUP BY id`,
+      ),
+    )
+    expect(newCollection.toArray).toStrictEqual(table_1.toArray)
+  })
 })

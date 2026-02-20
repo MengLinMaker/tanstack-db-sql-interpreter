@@ -1,18 +1,12 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import type { Context, QueryBuilder } from '@tanstack/db'
-import { collectionProperties, collectionsFilter } from '../util/collection'
-import { defaultSwitchNodeError } from '../util/error'
-import { stringifyObjectMulti } from '../util/print'
-import type { Collections } from '../util/types'
-import { columnNode } from './shared/column'
-import { type Expression, expressionNode } from './shared/expression'
+import type { BaseQueryBuilder, Context, QueryBuilder } from '@tanstack/db'
+import { collectionProperties, collectionsFilter } from '../util/collection.ts'
+import { defaultSwitchNodeError } from '../util/error.ts'
+import { stringifyObjectMulti } from '../util/print.ts'
+import type { Collections } from '../util/types.ts'
+import { columnNode } from './shared/column.ts'
+import { type Expression, expressionNode } from './shared/expression.ts'
 
-type Select = {
-  [columnAlias: string]: {
-    table: string
-    column: string
-  }
-}
 type Expr = {
   [columnAlias: string]: Expression
 }
@@ -23,7 +17,6 @@ export const selectNode = (
   collections: Collections,
 ) => {
   let exclude: string[] = []
-  let select: Select = {}
   let expr: Expr = {}
   for (const n of node.children) {
     switch (n.name) {
@@ -34,8 +27,7 @@ export const selectNode = (
         break
       case 'SELECT_EXPRESSION': {
         const result = selectExpressionNode(n, collections)
-        select = { ...select, ...result.select }
-        expr = { ...expr, ...result.expr }
+        expr = { ...expr, ...result }
         break
       }
       case 'EXCLUDE':
@@ -45,19 +37,19 @@ export const selectNode = (
         throw defaultSwitchNodeError(n)
     }
   }
-  for (const columnAlias of exclude) delete select[columnAlias]
+  for (const columnAlias of exclude) delete expr[columnAlias]
 
   q = q.select((c) => {
     const selectObj: { [key: string]: any } = {}
-    for (const [columnAlias, column] of Object.entries(select)) {
-      selectObj[columnAlias] = c[column.table]![columnAlias]
+    for (const [columnAlias, expression] of Object.entries(expr)) {
+      selectObj[columnAlias] = applyExpression(expression, c)
     }
     return selectObj
   })
 
   const selectObj: { [key: string]: any } = {}
-  for (const [columnAlias, column] of Object.entries(select)) {
-    selectObj[columnAlias] = `c.${column.table}.${column.column}`
+  for (const [columnAlias, expression] of Object.entries(expr)) {
+    selectObj[columnAlias] = stringifyExpression(expression)
   }
   console.debug(` .select(c => (${stringifyObjectMulti(selectObj)}))`)
   return { query: q }
@@ -66,43 +58,85 @@ export const selectNode = (
 export const selectExpressionNode = (
   node: Node.SELECT_EXPRESSION,
   collections: Collections,
-) => {
+): Expr => {
   const n = node.children[0]
   switch (n.name) {
-    case 'SELECT_ALL':
-      return {
-        select: allColumns(collections),
-        expr: {},
-      }
+    case 'SELECT_ALL': {
+      return allColumns(collections)
+    }
     case 'SELECT_TABLE': {
       const table = n.children[0].value
-      return {
-        select: allColumns(collectionsFilter(collections, [table])),
-        expr: {},
-      }
+      return allColumns(collectionsFilter(collections, [table]))
     }
     case 'SELECT_COLUMN': {
       const column = columnNode(n.children[0], collections)
       return {
-        select: { [column.column]: column },
-        expr: {},
+        [column.column]: {
+          type: 'column',
+          column,
+        },
       }
     }
     case 'SELECT_EXPRESSION_AS':
       return {
-        select: {},
-        expr: expressionNode(n.children[0], collections),
+        [n.children[2].children[0].value]: expressionNode(
+          n.children[0],
+          collections,
+        ),
       }
     default:
       throw defaultSwitchNodeError(n)
   }
 }
 
+export const stringifyExpression = (expr: Expression): string => {
+  switch (expr.type) {
+    case 'function': {
+      const name = expr.func.name
+      const args = expr.args.map(stringifyExpression).join(', ')
+      return `${name}(${args})`
+    }
+    case 'column':
+      return `c.${expr.column.table}.${expr.column.column}`
+    case 'literal':
+      return stringifyLiteral(expr.value)
+    default:
+      return expr satisfies never
+  }
+}
+
+export const applyExpression = (
+  expr: Expression,
+  c: Parameters<Parameters<BaseQueryBuilder['select']>[number]>[number],
+) => {
+  switch (expr.type) {
+    case 'function': {
+      const args = expr.args.map((arg) => applyExpression(arg, c))
+      // @ts-expect-error override for convenience
+      return expr.func(...args)
+    }
+    case 'column':
+      return c[expr.column.table]![expr.column.column]
+    case 'literal':
+      return expr.value
+    default:
+      return undefined
+  }
+}
+
+const stringifyLiteral = (value: unknown) => {
+  if (value === null) return 'null'
+  if (typeof value === 'string') return `'${value.replaceAll("'", "''")}'`
+  if (typeof value === 'boolean') return value ? 'true' : 'false'
+  if (typeof value === 'number') return `${value}`
+  return `'${String(value)}'`
+}
+
 const allColumns = (collections: Collections) => {
-  const select: Select = {}
+  const select: Expr = {}
   for (const table of Object.keys(collections)) {
     for (const column of collectionProperties(collections, table))
-      select[column] = { table, column }
+      select[column] = { type: 'column', column: { table, column } }
   }
   return select
 }

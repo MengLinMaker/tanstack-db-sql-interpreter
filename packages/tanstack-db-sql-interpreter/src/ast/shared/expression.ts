@@ -1,7 +1,9 @@
 import type { Node } from '@menglinmaker/sql-parser'
 import {
+  add,
   and,
   avg,
+  coalesce,
   concat,
   count,
   eq,
@@ -20,14 +22,15 @@ import {
   sum,
   upper,
 } from '@tanstack/db'
-import { collectionProperties } from '../../util/collection'
-import { defaultSwitchNodeError } from '../../util/error'
-import type { Collections } from '../../util/types'
-import { columnNode } from './column'
+import { collectionProperties } from '../../util/collection.ts'
+import { defaultSwitchNodeError } from '../../util/error.ts'
+import type { Collections } from '../../util/types.ts'
+import { columnNode } from './column.ts'
 
 const notEq = (a, b) => not(eq(a, b))
 
 const expressionMap = {
+  // FUNC_SINGLE
   UPPER__: upper,
   LOWER__: lower,
   LENGTH__: length,
@@ -37,7 +40,10 @@ const expressionMap = {
   AVG__: avg,
   MIN__: min,
   MAX__: max,
+  // FUNC_MANY
   CONCAT__: concat,
+  COALESCE__: coalesce,
+  // OPERATOR
   EQUAL__: eq,
   NOT_EQ__: notEq,
   GT__: gt,
@@ -49,6 +55,7 @@ const expressionMap = {
   OR__: or,
   LIKE__: like,
   ILIKE__: ilike,
+  PLUS__: add,
 } as const
 const getExpressionMap = (key: keyof typeof expressionMap) => expressionMap[key]
 
@@ -70,7 +77,7 @@ type ExpressionLiteral = {
 export const expressionNode = (
   node: Node.EXPRESSION,
   collections: Collections,
-) => {
+): Expression => {
   const n = node.children[0]
   switch (n.name) {
     case 'PARENTHESIS_EXPRESSION':
@@ -80,7 +87,7 @@ export const expressionNode = (
         type: 'function',
         func: getExpressionMap(n.children[0].children[0].name),
         args: [expressionNode(n.children[0].children[1], collections)],
-      } as const satisfies ExpressionFunc
+      }
     case 'FUNC_MANY':
       return {
         type: 'function',
@@ -88,7 +95,7 @@ export const expressionNode = (
         args: n.children[0].children[1].children.map((n) =>
           expressionNode(n, collections),
         ),
-      } as const satisfies ExpressionFunc
+      }
     case 'OPERATOR':
       if (n.children[0].name === 'NOT_EQ') {
         return {
@@ -113,7 +120,7 @@ export const expressionNode = (
           expressionNode(n.children[0].children[0], collections),
           expressionNode(n.children[0].children[2], collections),
         ],
-      } as const satisfies ExpressionFunc
+      }
     case 'COUNT_ALL': {
       const table = Object.keys(collections)[0]!
       const column = collectionProperties(collections, table)[0]!
@@ -126,16 +133,18 @@ export const expressionNode = (
             column: { table, column },
           },
         ],
-      } as const satisfies ExpressionFunc
+      }
     }
-    case 'LITERAL_VALUE': {
-      break
-    }
+    case 'LITERAL_VALUE':
+      return {
+        type: 'literal',
+        value: literalNode(n),
+      }
     case 'COLUMN': {
       return {
         type: 'column',
         column: columnNode(n, collections),
-      } as const satisfies ExpressionColumn
+      }
     }
     default:
       throw defaultSwitchNodeError(n)
