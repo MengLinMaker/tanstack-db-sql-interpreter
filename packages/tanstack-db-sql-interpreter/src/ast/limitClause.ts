@@ -1,5 +1,5 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import { defaultSwitchNodeError } from '../error'
+import { defaultSwitchNodeError } from '../util/error'
 
 export const limitNode = (node: Node.LIMIT) => {
   const n = node.children[0]

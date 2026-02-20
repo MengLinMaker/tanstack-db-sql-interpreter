@@ -1,5 +1,5 @@
-import { LiveQuerySqlError } from '../error'
-import type { Collections } from '../types'
+import { LiveQuerySqlError } from './error'
+import type { Collections } from './types'
 
 export const singleCollectionsFilter = <T extends Collections>(
   collections: T,

@@ -1,7 +1,7 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import { defaultSwitchNodeError } from '../error'
-import type { Collections } from '../types'
-import { columnNode } from './common'
+import { defaultSwitchNodeError } from '../util/error'
+import type { Collections } from '../util/types'
+import { columnNode } from './shared/column'
 
 export const orderNode = (node: Node.ORDER, collections: Collections) => {
   const columns: {

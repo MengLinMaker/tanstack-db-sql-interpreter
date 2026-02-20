@@ -1,15 +1,20 @@
 import type { Node } from '@menglinmaker/sql-parser'
 import type { Context, QueryBuilder } from '@tanstack/db'
-import type { Collections } from '../types'
-import { defaultSwitchNodeError } from '../error'
-import { collectionProperties, collectionsFilter } from '../helpers/collection'
-import { columnNode } from './common'
+import { collectionProperties, collectionsFilter } from '../util/collection'
+import { defaultSwitchNodeError } from '../util/error'
+import { stringifyObjectMulti } from '../util/print'
+import type { Collections } from '../util/types'
+import { columnNode } from './shared/column'
+import { type Expression, expressionNode } from './shared/expression'
 
 type Select = {
-  [key: string]: {
+  [columnAlias: string]: {
     table: string
     column: string
   }
+}
+type Expr = {
+  [columnAlias: string]: Expression
 }
 
 export const selectNode = (
@@ -19,6 +24,7 @@ export const selectNode = (
 ) => {
   let exclude: string[] = []
   let select: Select = {}
+  let expr: Expr = {}
   for (const n of node.children) {
     switch (n.name) {
       case 'SELECT__':
@@ -26,9 +32,12 @@ export const selectNode = (
       case 'DISTINCT__':
         q = q.distinct()
         break
-      case 'SELECT_EXPRESSION':
-        select = selectExpressionNode(n, collections)
+      case 'SELECT_EXPRESSION': {
+        const result = selectExpressionNode(n, collections)
+        select = { ...select, ...result.select }
+        expr = { ...expr, ...result.expr }
         break
+      }
       case 'EXCLUDE':
         exclude = excludeNode(n)
         break
@@ -50,9 +59,7 @@ export const selectNode = (
   for (const [columnAlias, column] of Object.entries(select)) {
     selectObj[columnAlias] = `c.${column.table}.${column.column}`
   }
-  console.debug(
-    ` .select(c => ${JSON.stringify(selectObj, null, 2).replaceAll('"', '').replaceAll('\n', '\n ')})`,
-  )
+  console.debug(` .select(c => (${stringifyObjectMulti(selectObj)}))`)
   return { query: q }
 }
 
@@ -60,42 +67,38 @@ export const selectExpressionNode = (
   node: Node.SELECT_EXPRESSION,
   collections: Collections,
 ) => {
-  let select: Select = {}
   const n = node.children[0]
   switch (n.name) {
-    case 'SELECT_ALL': {
-      const columns = allColumns(collections)
-      select = { ...select, ...columns }
-      break
-    }
+    case 'SELECT_ALL':
+      return {
+        select: allColumns(collections),
+        expr: {},
+      }
     case 'SELECT_TABLE': {
       const table = n.children[0].value
-      const columns = allColumns(collectionsFilter(collections, [table]))
-      select = { ...select, ...columns }
-      break
+      return {
+        select: allColumns(collectionsFilter(collections, [table])),
+        expr: {},
+      }
     }
     case 'SELECT_COLUMN': {
       const column = columnNode(n.children[0], collections)
-      select = { ...select, [column.column]: column }
-      break
+      return {
+        select: { [column.column]: column },
+        expr: {},
+      }
     }
-    case 'SELECT_COLUMN_AS': {
-      const column = columnNode(n.children[0], collections)
-      const columnAlias = n.children[2].children[0].value
-      select = { ...select, [columnAlias]: column }
-      break
-    }
-    case 'SELECT_AGGREGATE':
-      break
-    case 'SELECT_AGGREGATE_AS':
-      break
+    case 'SELECT_EXPRESSION_AS':
+      return {
+        select: {},
+        expr: expressionNode(n.children[0], collections),
+      }
     default:
       throw defaultSwitchNodeError(n)
   }
-  return select
 }
 
-export const allColumns = (collections: Collections) => {
+const allColumns = (collections: Collections) => {
   const select: Select = {}
   for (const table of Object.keys(collections)) {
     for (const column of collectionProperties(collections, table))
@@ -104,7 +107,7 @@ export const allColumns = (collections: Collections) => {
   return select
 }
 
-export const excludeNode = (node: Node.EXCLUDE) => {
+const excludeNode = (node: Node.EXCLUDE) => {
   const columns: string[] = []
   for (const n of node.children) {
     switch (n.name) {

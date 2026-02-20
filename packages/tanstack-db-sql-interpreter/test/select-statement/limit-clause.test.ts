@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { liveQuerySql } from '../../src/liveQuerySql.ts'
+import { liveQuerySql } from '../../src/index.ts'
 import { eagerLiveQueryCollection, testCollectionFactory } from '../helper.ts'
 
 describe('LIMIT clause', () => {

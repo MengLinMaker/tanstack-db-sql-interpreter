@@ -5,15 +5,15 @@ import {
   type InitialQueryBuilder,
   type QueryBuilder,
 } from '@tanstack/db'
-import { defaultSwitchNodeError } from '../error'
 import {
   columnNotFoundCheck,
   findColumnFromTables,
   singleCollectionsFilter,
-} from '../helpers/collection.ts'
-import { stringifyObject } from '../helpers/print.ts'
-import type { Collections } from '../types.ts'
-import { columnNode } from './common.ts'
+} from '../util/collection.ts'
+import { defaultSwitchNodeError } from '../util/error.ts'
+import { stringifyObject } from '../util/print.ts'
+import type { Collections } from '../util/types.ts'
+import { columnNode } from './shared/column.ts'
 
 export const fromNode = (
   node: Node.FROM,

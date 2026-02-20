@@ -1,10 +1,10 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import { defaultSwitchNodeError } from '../error'
 import {
   columnNotFoundCheck,
   findColumnFromTables,
-} from '../helpers/collection'
-import type { Collections } from '../types'
+} from '../../util/collection'
+import { defaultSwitchNodeError } from '../../util/error'
+import type { Collections } from '../../util/types'
 
 export const columnNode = (node: Node.COLUMN, collections: Collections) => {
   const n = node.children[0]
