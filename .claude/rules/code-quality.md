@@ -1,6 +1,4 @@
-# Agent Coding Guidelines for TanStack DB
-
-This guide provides principles and patterns for AI agents contributing to the TanStack DB codebase. These guidelines are derived from PR review patterns and reflect the quality standards expected in this project.
+# Agent Code Quality Guidelines
 
 ## Table of Contents
 

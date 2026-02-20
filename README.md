@@ -21,7 +21,6 @@ However, app users cannot write SQL to create their own `Tanstack db` collection
 
 ## Design considerations
 ### Core features
-
 1. Parser grammar should not support destructive SQL - DELETE, ALTER
 2. Parser should be reused for language server features:
     - Error correcting for auto suggestion.
@@ -41,8 +40,24 @@ _It may be easier to generate own parser from custom grammar._
   - [Snowsql](https://github.com/Snowflake-Labs/lezer-snowsql/blob/main/src/snowsql.grammar)
 
 ### Additional features - if core features are done
-
 1. Language server should integrate with open source browser based code editors:
     - Provides language support for tanstack db in IDEs like VSCode.
     - [CodeMirror](https://codemirror.net/)
 2. Create eslint plugin for linting.
+
+## Development
+### Structure
+Library code is placed in `./packages`:
+- `./packages/sql-parser` - produces typesafe SQL AST.
+- `./packages/tanstack-db-sql-interpreter` - interpreter for Tanstack db query builder.
+
+### Local
+1. `pnpm i`
+2. `pnpm watch` - Watch all tests and builds in dependency order.
+
+To ensure caching works properly, you MUST only:
+- Place all tests in `test` folder
+- Place all source code in `src` folder
+- Generate builds to `dist` folder
+
+Make changes to `nx.json` if needed
