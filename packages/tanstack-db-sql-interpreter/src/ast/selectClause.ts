@@ -1,7 +1,10 @@
 import type { Node } from '@menglinmaker/sql-parser'
 import type { BaseQueryBuilder, Context, QueryBuilder } from '@tanstack/db'
 import { collectionProperties, collectionsFilter } from '../util/collection.ts'
-import { defaultSwitchNodeError } from '../util/error.ts'
+import {
+  defaultSwitchExprError,
+  defaultSwitchNodeError,
+} from '../util/error.ts'
 import { stringifyObjectMulti } from '../util/print.ts'
 import type { Collections } from '../util/types.ts'
 import { columnNode } from './shared/column.ts'
@@ -100,8 +103,11 @@ export const stringifyExpression = (expr: Expression): string => {
       return `c.${expr.column.table}.${expr.column.column}`
     case 'literal':
       return stringifyLiteral(expr.value)
+    case 'array': {
+      return `[${expr.args.map((v) => stringifyExpression(v)).join(', ')}]`
+    }
     default:
-      return expr satisfies never
+      throw defaultSwitchExprError(expr)
   }
 }
 
@@ -119,8 +125,10 @@ export const applyExpression = (
       return c[expr.column.table]![expr.column.column]
     case 'literal':
       return expr.value
+    case 'array':
+      return expr.args.map((e) => applyExpression(e, c))
     default:
-      return undefined
+      throw defaultSwitchExprError(expr)
   }
 }
 

@@ -125,14 +125,14 @@ EXPRESSION {
     | COUNT_ALL { COUNT__ open_parenthesis__ STAR__ close_parenthesis__ }
     | LITERAL_VALUE
     | COLUMN
+    | BETWEEN
+    | IN_ARRAY
 }
-// | IN_ARRAY
-// | BETWEEN
 FUNC_SINGLE {
     UPPER { UPPER__ { @specialize<identifier__, 'UPPER' | 'upper'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }
     | LOWER { LOWER__ { @specialize<identifier__, 'LOWER' | 'lower'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }
     | LENGTH { LENGTH__ { @specialize<identifier__, 'LENGTH' | 'length'> } open_parenthesis__ EXPRESSION  close_parenthesis__ }
-    | NOT { NOT__ { @specialize<identifier__, 'NOT' | 'not'> } EXPRESSION }
+    | NOT { NOT__ { @specialize<identifier__, 'NOT' | 'not'> } open_parenthesis__ EXPRESSION close_parenthesis__ }
     | COUNT { COUNT__ open_parenthesis__ EXPRESSION close_parenthesis__ }
     | SUM { SUM__ { @specialize<identifier__, 'SUM' | 'sum'> } open_parenthesis__ EXPRESSION close_parenthesis__ }
     | AVG { AVG__ { @specialize<identifier__, 'AVG' | 'avg'> } open_parenthesis__ EXPRESSION close_parenthesis__ }
@@ -141,6 +141,7 @@ FUNC_SINGLE {
 }
 FUNC_MANY {
     CONCAT { CONCAT__ { @specialize<identifier__, 'CONCAT' | 'concat'> } ARRAY }
+    | COALESCE { COALESCE__ { @specialize<identifier__, 'COALESCE' | 'coalesce'> } ARRAY }
 }
 OPERATOR {
     EQ { EXPRESSION !operator EQUAL__ EXPRESSION }

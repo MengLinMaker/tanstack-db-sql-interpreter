@@ -6,5 +6,11 @@ export class LiveQuerySqlError extends Error {
 }
 
 export const defaultSwitchNodeError = (node: never) =>
-  // @ts-expect-error <intentionally use never type>
-  new LiveQuerySqlError(`Node not covered by switch statement: ${node.name}`)
+  new LiveQuerySqlError(
+    `Node case not covered by switch statement: ${JSON.stringify(node, null, 2)}`,
+  )
+
+export const defaultSwitchExprError = (expr: never) =>
+  new LiveQuerySqlError(
+    `Expr case not covered by switch statement: ${JSON.stringify(expr, null, 2)}`,
+  )

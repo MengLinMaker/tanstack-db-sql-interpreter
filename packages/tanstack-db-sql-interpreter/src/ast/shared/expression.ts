@@ -10,6 +10,7 @@ import {
   gt,
   gte,
   ilike,
+  inArray,
   length,
   like,
   lower,
@@ -59,7 +60,11 @@ const expressionMap = {
 } as const
 const getExpressionMap = (key: keyof typeof expressionMap) => expressionMap[key]
 
-export type Expression = ExpressionFunc | ExpressionColumn | ExpressionLiteral
+export type Expression =
+  | ExpressionFunc
+  | ExpressionColumn
+  | ExpressionLiteral
+  | ExpressionArray
 type ExpressionFunc = {
   type: 'function'
   func: ReturnType<typeof getExpressionMap>
@@ -72,6 +77,10 @@ type ExpressionColumn = {
 type ExpressionLiteral = {
   type: 'literal'
   value: ReturnType<typeof literalNode>
+}
+type ExpressionArray = {
+  type: 'array'
+  args: Expression[]
 }
 
 export const expressionNode = (
@@ -97,6 +106,7 @@ export const expressionNode = (
         ),
       }
     case 'OPERATOR':
+      // Not equal edge case
       if (n.children[0].name === 'NOT_EQ') {
         return {
           type: 'function',
@@ -121,7 +131,21 @@ export const expressionNode = (
           expressionNode(n.children[0].children[2], collections),
         ],
       }
+    case 'LITERAL_VALUE':
+      return {
+        type: 'literal',
+        value: literalNode(n),
+      }
+    case 'COLUMN': {
+      return {
+        type: 'column',
+        column: columnNode(n, collections),
+      }
+    }
+
+    // Expression edge case nodes
     case 'COUNT_ALL': {
+      // Forced to select specific column due to query builder limitations
       const table = Object.keys(collections)[0]!
       const column = collectionProperties(collections, table)[0]!
       return {
@@ -135,15 +159,39 @@ export const expressionNode = (
         ],
       }
     }
-    case 'LITERAL_VALUE':
+    case 'IN_ARRAY': {
+      n.children[0]
       return {
-        type: 'literal',
-        value: literalNode(n),
+        type: 'function',
+        func: inArray,
+        args: [
+          expressionNode(n.children[0], collections),
+          {
+            type: 'array',
+            args: n.children[2].children.map((n) =>
+              expressionNode(n, collections),
+            ),
+          },
+        ],
       }
-    case 'COLUMN': {
+    }
+    case 'BETWEEN': {
+      const compare = expressionNode(n.children[0], collections)
       return {
-        type: 'column',
-        column: columnNode(n, collections),
+        type: 'function',
+        func: and,
+        args: [
+          {
+            type: 'function',
+            func: gte,
+            args: [compare, expressionNode(n.children[2], collections)],
+          },
+          {
+            type: 'function',
+            func: lte,
+            args: [compare, expressionNode(n.children[4], collections)],
+          },
+        ],
       }
     }
     default:
