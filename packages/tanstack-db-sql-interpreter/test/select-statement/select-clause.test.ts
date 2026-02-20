@@ -176,7 +176,6 @@ describe('SELECT clause', () => {
         ),
       )
       expect(newCollection.toArray[0]).toStrictEqual({ row: false })
-
     })
 
     it('expression between', () => {

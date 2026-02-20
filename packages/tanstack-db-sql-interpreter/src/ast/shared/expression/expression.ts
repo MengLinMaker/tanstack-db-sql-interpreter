@@ -1,64 +1,10 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import {
-  add,
-  and,
-  avg,
-  coalesce,
-  concat,
-  count,
-  eq,
-  gt,
-  gte,
-  ilike,
-  inArray,
-  length,
-  like,
-  lower,
-  lt,
-  lte,
-  max,
-  min,
-  not,
-  or,
-  sum,
-  upper,
-} from '@tanstack/db'
-import { collectionProperties } from '../../util/collection.ts'
-import { defaultSwitchNodeError } from '../../util/error.ts'
-import type { Collections } from '../../util/types.ts'
-import { columnNode } from './column.ts'
-
-const notEq = (a, b) => not(eq(a, b))
-
-const expressionMap = {
-  // FUNC_SINGLE
-  UPPER__: upper,
-  LOWER__: lower,
-  LENGTH__: length,
-  NOT__: not,
-  COUNT__: count,
-  SUM__: sum,
-  AVG__: avg,
-  MIN__: min,
-  MAX__: max,
-  // FUNC_MANY
-  CONCAT__: concat,
-  COALESCE__: coalesce,
-  // OPERATOR
-  EQUAL__: eq,
-  NOT_EQ__: notEq,
-  GT__: gt,
-  GTE__: gte,
-  LT__: lt,
-  LTE__: lte,
-  IS__: eq,
-  AND__: and,
-  OR__: or,
-  LIKE__: like,
-  ILIKE__: ilike,
-  PLUS__: add,
-} as const
-const getExpressionMap = (key: keyof typeof expressionMap) => expressionMap[key]
+import { and, count, eq, gte, inArray, lte, not } from '@tanstack/db'
+import { collectionProperties } from '../../../util/collection.ts'
+import { defaultSwitchNodeError } from '../../../util/error.ts'
+import type { Collections } from '../../../util/types.ts'
+import { columnNode } from '../column.ts'
+import { getExpressionMap } from './expressionMap.ts'
 
 export type Expression =
   | ExpressionFunc
@@ -199,7 +145,7 @@ export const expressionNode = (
   }
 }
 
-const literalNode = (node: Node.LITERAL_VALUE) => {
+export const literalNode = (node: Node.LITERAL_VALUE) => {
   const n = node.children[0]
   switch (n.name) {
     case 'NUMERIC_LITERAL__':

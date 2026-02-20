@@ -8,7 +8,12 @@ import {
 import { stringifyObjectMulti } from '../util/print.ts'
 import type { Collections } from '../util/types.ts'
 import { columnNode } from './shared/column.ts'
-import { type Expression, expressionNode } from './shared/expression.ts'
+import {
+  type Expression,
+  expressionNode,
+} from './shared/expression/expression.ts'
+import { applyExpression } from './shared/expression/apply.ts'
+import { stringifyExpression } from './shared/expression/stringify.ts'
 
 type Expr = {
   [columnAlias: string]: Expression
@@ -90,54 +95,6 @@ export const selectExpressionNode = (
     default:
       throw defaultSwitchNodeError(n)
   }
-}
-
-export const stringifyExpression = (expr: Expression): string => {
-  switch (expr.type) {
-    case 'function': {
-      const name = expr.func.name
-      const args = expr.args.map(stringifyExpression).join(', ')
-      return `${name}(${args})`
-    }
-    case 'column':
-      return `c.${expr.column.table}.${expr.column.column}`
-    case 'literal':
-      return stringifyLiteral(expr.value)
-    case 'array': {
-      return `[${expr.args.map((v) => stringifyExpression(v)).join(', ')}]`
-    }
-    default:
-      throw defaultSwitchExprError(expr)
-  }
-}
-
-export const applyExpression = (
-  expr: Expression,
-  c: Parameters<Parameters<BaseQueryBuilder['select']>[number]>[number],
-) => {
-  switch (expr.type) {
-    case 'function': {
-      const args = expr.args.map((arg) => applyExpression(arg, c))
-      // @ts-expect-error override for convenience
-      return expr.func(...args)
-    }
-    case 'column':
-      return c[expr.column.table]![expr.column.column]
-    case 'literal':
-      return expr.value
-    case 'array':
-      return expr.args.map((e) => applyExpression(e, c))
-    default:
-      throw defaultSwitchExprError(expr)
-  }
-}
-
-const stringifyLiteral = (value: unknown) => {
-  if (value === null) return 'null'
-  if (typeof value === 'string') return `'${value.replaceAll("'", "''")}'`
-  if (typeof value === 'boolean') return value ? 'true' : 'false'
-  if (typeof value === 'number') return `${value}`
-  return `'${String(value)}'`
 }
 
 const allColumns = (collections: Collections) => {
