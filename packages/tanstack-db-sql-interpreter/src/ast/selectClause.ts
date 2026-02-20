@@ -1,10 +1,7 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import type { BaseQueryBuilder, Context, QueryBuilder } from '@tanstack/db'
+import type { Context, QueryBuilder } from '@tanstack/db'
 import { collectionProperties, collectionsFilter } from '../util/collection.ts'
-import {
-  defaultSwitchExprError,
-  defaultSwitchNodeError,
-} from '../util/error.ts'
+import { defaultSwitchNodeError } from '../util/error.ts'
 import { stringifyObjectMulti } from '../util/print.ts'
 import type { Collections } from '../util/types.ts'
 import { columnNode } from './shared/column.ts'
