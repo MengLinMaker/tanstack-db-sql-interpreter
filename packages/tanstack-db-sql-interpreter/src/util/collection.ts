@@ -1,3 +1,4 @@
+import { BaseQueryBuilder } from '@tanstack/db'
 import { LiveQuerySqlError } from './error.ts'
 import type { Collections } from './types.ts'
 
@@ -27,7 +28,16 @@ export const collectionProperties = (
 ) => {
   const collection = collections[tableName]
   if (!collection)
-    throw new LiveQuerySqlError(`'tableName' collection table not found`)
+    throw new LiveQuerySqlError(`Collection table not found: '${tableName}'`)
+  // Case BaseQueryBuilder
+  if (collection instanceof BaseQueryBuilder) {
+    const queryIR = collection._getQuery()
+    if (queryIR.select) return Object.keys(queryIR.select)
+    throw new LiveQuerySqlError(
+      `'BaseQueryBuilder select keys not found: '${tableName}'`,
+    )
+  }
+  // Case collection
   const singleDataPoint = collection.entries().next().value[1]
   return Object.keys(singleDataPoint)
 }

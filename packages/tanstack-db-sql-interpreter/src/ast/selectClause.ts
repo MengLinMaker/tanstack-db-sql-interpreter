@@ -5,11 +5,11 @@ import { defaultSwitchNodeError } from '../util/error.ts'
 import { stringifyObjectMulti } from '../util/print.ts'
 import type { Collections } from '../util/types.ts'
 import { columnNode } from './shared/column.ts'
+import { applyExpression } from './shared/expression/apply.ts'
 import {
   type Expression,
   expressionNode,
 } from './shared/expression/expression.ts'
-import { applyExpression } from './shared/expression/apply.ts'
 import { stringifyExpression } from './shared/expression/stringify.ts'
 
 type Expr = {

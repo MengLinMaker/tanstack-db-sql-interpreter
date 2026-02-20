@@ -22,7 +22,7 @@ describe('JOIN clause', () => {
     strictParseSql(`
       SELECT a.id, b.id
       FROM table1 a
-      JOIN table2 b USING (id);
+      JOIN table2 b USING (id)
     `)
   })
 })

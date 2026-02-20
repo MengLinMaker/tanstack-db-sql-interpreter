@@ -1,12 +1,22 @@
 import { strictParseSql } from '@menglinmaker/sql-parser'
+import type { InitialQueryBuilder } from '@tanstack/db'
+import { cteNode } from './ast/cte.ts'
 import { selectStatementNode } from './ast/selectStatementNode.ts'
-import { LiveQuerySqlError } from './util/error.ts'
+import { defaultSwitchNodeError } from './util/error.ts'
 import type { Collections } from './util/types.ts'
 
 export const liveQuerySql = (collections: Collections, sql: string) => {
   const ast = strictParseSql(sql)
-  if (ast.children[0]!.name === 'SELECT_STATEMENT') {
-    return selectStatementNode(ast.children[0]!, collections)
+  const queryBuilder = (query: InitialQueryBuilder) => {
+    const n = ast.children[0]
+    switch (n.name) {
+      case 'SELECT_STATEMENT':
+        return selectStatementNode(n, query, collections)
+      case 'CTE':
+        return cteNode(n, query, collections)
+      default:
+        throw defaultSwitchNodeError(n)
+    }
   }
-  throw new LiveQuerySqlError('Cannot find CTE or SELECT statement')
+  return queryBuilder
 }

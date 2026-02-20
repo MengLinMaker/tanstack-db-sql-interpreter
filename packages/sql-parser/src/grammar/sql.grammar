@@ -5,17 +5,23 @@
  */
 
 @top SQL {
-  ignore* SELECT_STATEMENT semicolon__? ignore*
+  SELECT_STATEMENT
+  | CTE
 }
-@skip { whitespace__ }
+@skip { whitespace__ | ignore }
 @precedence {
     operator @left
 }
 
 /*
- * CTE statement
- */
-// WITH__ { @specialize<identifier__, 'WITH' | 'with'> }
+* CTE statement
+*/
+CTE {
+    WITH__ { @specialize<identifier__, 'WITH' | 'with'> }
+    CTE_EXPRESSION { WITH (comma__ WITH)* }
+    SELECT_STATEMENT
+}
+WITH { TABLE_NAME__ AS__ open_parenthesis__ SELECT_STATEMENT close_parenthesis__ }
 
 /*
  * SELECT statement
@@ -210,7 +216,7 @@ BY__ { @specialize<identifier__, 'BY' | 'by'> }
     open_parenthesis__ { '(' }
     close_parenthesis__ { ')' }
     comma__ { ',' }
-    semicolon__ { ';' }
+    // semicolon__ { ';' }
 
     /* Arithmetic operator */
     PLUS__ { '+' }
