@@ -1,7 +1,7 @@
 import type { Node } from '@menglinmaker/sql-parser'
-import { defaultSwitchNodeError } from '../util/error'
-import type { Collections } from '../util/types'
-import { columnNode } from './shared/column'
+import { defaultSwitchNodeError } from '../util/error.ts'
+import type { Collections } from '../util/types.ts'
+import { columnNode } from './shared/column.ts'
 
 export const groupNode = (node: Node.GROUP, collections: Collections) => {
   const columns: ReturnType<typeof columnNode>[] = []

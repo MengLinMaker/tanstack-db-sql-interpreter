@@ -1,7 +1,7 @@
 import { strictParseSql } from '@menglinmaker/sql-parser'
-import { selectStatementNode } from './ast/selectStatementNode'
-import { LiveQuerySqlError } from './util/error'
-import type { Collections } from './util/types'
+import { selectStatementNode } from './ast/selectStatementNode.ts'
+import { LiveQuerySqlError } from './util/error.ts'
+import type { Collections } from './util/types.ts'
 
 export const liveQuerySql = (collections: Collections, sql: string) => {
   const ast = strictParseSql(sql)

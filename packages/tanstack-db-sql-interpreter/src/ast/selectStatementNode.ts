@@ -1,13 +1,13 @@
 import type { Node } from '@menglinmaker/sql-parser'
 import type { InitialQueryBuilder } from '@tanstack/db'
-import { defaultSwitchNodeError } from '../util/error'
-import { stringifyObjectMulti } from '../util/print'
-import type { Collections } from '../util/types'
-import { fromNode } from './fromClause'
-import { groupNode } from './groupClause'
-import { limitNode } from './limitClause'
-import { orderNode } from './orderClause'
-import { selectNode } from './selectClause'
+import { defaultSwitchNodeError } from '../util/error.ts'
+import { stringifyObjectMulti } from '../util/print.ts'
+import type { Collections } from '../util/types.ts'
+import { fromNode } from './fromClause.ts'
+import { groupNode } from './groupClause.ts'
+import { limitNode } from './limitClause.ts'
+import { orderNode } from './orderClause.ts'
+import { selectNode } from './selectClause.ts'
 
 export const selectStatementNode = (
   node: Node.SELECT_STATEMENT,
