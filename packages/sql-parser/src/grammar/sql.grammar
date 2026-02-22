@@ -216,7 +216,6 @@ BY__ { @specialize<identifier__, 'BY' | 'by'> }
     open_parenthesis__ { '(' }
     close_parenthesis__ { ')' }
     comma__ { ',' }
-    // semicolon__ { ';' }
 
     /* Arithmetic operator */
     PLUS__ { '+' }

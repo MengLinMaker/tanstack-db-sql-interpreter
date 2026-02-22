@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    name: Test - lint, type and unit
+    name: Test
     runs-on: ubuntu-24.04-arm
     # Cache even on failure
     continue-on-error: true
