@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-24.04-arm
+    # Cache even on failure
+    continue-on-error: true
+    steps:
+      - name: Deep checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm i --no-frozen-lockfile --prefer-offline
+
+      - name: Build affected packages
+        shell: bash
+        run: pnpm --filter '...[origin/main]' build
+
+      - name: Test lint, type and unit
+        run: pnpm --filter '...[origin/main]' '/test:(type|lint|unit)/'
