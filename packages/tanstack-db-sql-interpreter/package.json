@@ -5,7 +5,7 @@
   "scripts": {
     "test:lint": "biome lint --write",
     "test:type": "tsgo",
-    "test:unit": "vitest run --coverage"
+    "test:unit": "vitest run --coverage --changed origin/main"
   },
   "peerDependencies": {
     "@tanstack/db": "^0.5.25"
