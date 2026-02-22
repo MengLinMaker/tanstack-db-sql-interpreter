@@ -16,12 +16,12 @@
     "watch": "nx watch --all -- 'pnpm format && nx run-many -t test:lint test:type test:unit build'"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.3",
+    "@biomejs/biome": "2.4.4",
     "@types/node": "^24.6.2",
     "@typescript/native-preview": "7.0.0-dev.20260201.1",
     "@vitest/coverage-v8": "4.0.18",
     "esbuild": "^0.27.3",
-    "knip": "5.63.1",
+    "knip": "5.85.0",
     "nx": "21.5.2",
     "simple-git-hooks": "2.13.1",
     "typescript": "~5.9.2",
