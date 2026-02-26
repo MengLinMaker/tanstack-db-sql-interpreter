@@ -51,20 +51,20 @@ export default function App() {
         <h1>Browser IVM benchmark</h1>
       </section>
 
-      {/* <div class="actions">
-          <button class="primary">Start a comparison</button>
-          <button class="ghost">Load sample data</button>
-        </div> */}
-
       <section>
         <UsageMonitor intervalMs={100}></UsageMonitor>
       </section>
 
       <section class="card">
         <h2>View SQL</h2>
+        <p class="example-label">Select an example to load into the editor:</p>
         <div class="actions">
           {Object.entries(sqlExamples).map(([label, query]) => (
-            <button class="ghost" type="button" onClick={() => setSql(query)}>
+            <button
+              class="ghost example-button"
+              type="button"
+              onClick={() => setSql(query)}
+            >
               {label}
             </button>
           ))}
