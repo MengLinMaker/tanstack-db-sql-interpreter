@@ -204,6 +204,7 @@ ul {
   border: 1px solid var(--stroke);
   padding: 0.6rem;
   font-size: 0.95rem;
+  width: 50%;
 }
 
 .usage-monitor tr td:first-child {
