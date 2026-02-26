@@ -14,6 +14,32 @@ const sqlExamples = {
   AVG(h.higher_price_aud) AS avg_price,
   MAX(h.higher_price_aud) AS max_price
 FROM home_table h`,
+
+  'join overview': `SELECT
+  h.id,
+  h.street_address,
+  lf.suburb_name,
+  hf.bed_quantity,
+  hf.bath_quantity,
+  hf.car_quantity,
+  h.higher_price_aud
+FROM home_table h
+JOIN locality_table lf ON lf.id = h.locality_table_id
+JOIN home_feature_table hf ON hf.id = h.home_feature_table_id
+ORDER BY h.higher_price_aud DESC
+LIMIT 20`,
+
+  'price band': `SELECT
+  CASE
+    WHEN h.higher_price_aud < 500000 THEN 'under_500k'
+    WHEN h.higher_price_aud < 1000000 THEN '500k_1m'
+    WHEN h.higher_price_aud < 2000000 THEN '1m_2m'
+    ELSE 'over_2m'
+  END AS price_band,
+  COUNT(*) AS homes
+FROM home_table h
+GROUP BY price_band
+ORDER BY homes DESC`,
 }
 
 export default function App() {
@@ -36,6 +62,13 @@ export default function App() {
 
       <section class="card">
         <h2>View SQL</h2>
+        <div class="actions">
+          {Object.entries(sqlExamples).map(([label, query]) => (
+            <button class="ghost" type="button" onClick={() => setSql(query)}>
+              {label}
+            </button>
+          ))}
+        </div>
         <SqlTextInput value={sql()} onChange={setSql} />
       </section>
 
