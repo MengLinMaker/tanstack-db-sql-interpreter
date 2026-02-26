@@ -8,14 +8,16 @@ import { UsageMonitor } from './components/usageMonitor.tsx'
 export default function App() {
   return (
     <div class="page">
-      <h1>Browser IVM benchmark</h1>
+      <section>
+        <h1>Browser IVM benchmark</h1>
+      </section>
 
       {/* <div class="actions">
           <button class="primary">Start a comparison</button>
           <button class="ghost">Load sample data</button>
         </div> */}
 
-      <section class="card">
+      <section>
         <UsageMonitor intervalMs={100}></UsageMonitor>
       </section>
 
