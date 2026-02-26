@@ -1,4 +1,4 @@
-import { faker, fakerEN_AU } from '@faker-js/faker'
+import { faker } from '@faker-js/faker/locale/en_AU'
 import type { z } from 'zod/mini'
 import type { schemaZod } from '../schema/collections.ts'
 
@@ -27,9 +27,9 @@ const possible_locality_table: z.infer<typeof schemaZod.locality_table>[] = []
   for (let bed = 1; bed < 1000; bed++) {
     possible_locality_table.push({
       id: count++,
-      suburb_name: fakerEN_AU.location.city(),
-      postcode: fakerEN_AU.location.zipCode('####'),
-      state_abbreviation: fakerEN_AU.location.state({}),
+      suburb_name: faker.location.city(),
+      postcode: faker.location.zipCode('####'),
+      state_abbreviation: faker.location.state({}),
     })
   }
 }
@@ -47,7 +47,7 @@ export const generate = {
         min: 1,
         max: possible_home_feature_table.length,
       }),
-      street_address: fakerEN_AU.location.streetAddress(),
+      street_address: faker.location.streetAddress(),
       higher_price_aud: faker.number.int({ min: 100000, max: 1000000 }),
     } satisfies z.infer<typeof schemaZod.home_table>
   },
