@@ -44,6 +44,26 @@ const insertTestData = async (db: typeof PgliteDB.defaultValue) => {
   )
 }
 
+const yieldToUi = () =>
+  new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve())
+  })
+
+const insertTestDataNonBlocking = async (
+  db: typeof PgliteDB.defaultValue,
+  count: number,
+  onProgress?: (current: number) => void,
+) => {
+  const yieldEvery = 50
+  for (let i = 0; i < count; i++) {
+    await insertTestData(db)
+    onProgress?.(i + 1)
+    if ((i + 1) % yieldEvery === 0) {
+      await yieldToUi()
+    }
+  }
+}
+
 export function TestPgliteDB(props: { query: string; rowCount: number }) {
   const db = useContext(PgliteDB)
   const [state, setState] = createStore({
@@ -95,22 +115,12 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
     try {
       await clearLive()
 
-      await db.waitReady
       await db.exec(sqlSchema)
 
       const seedStart = performance.now()
       await seedTestData(db)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
-
-      const insertStart = performance.now()
-      const homeRows = props.rowCount
-      for (let i = 0; i < homeRows; i++) {
-        await insertTestData(db)
-      }
-
-      const insertDuration = performance.now() - insertStart
-      setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
 
       const liveQuery = await db.live.query({
         query: props.query,
@@ -121,9 +131,18 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
         const startedAt = performance.now()
         void liveQuery.refresh().then(() => {
           const duration = performance.now() - startedAt
-          setState({ queryStatus: `Last query: ${duration.toFixed(1)} ms` })
+          setState({ queryStatus: `${duration.toFixed(1)} ms` })
         })
-      }, 100)
+      }, 1000)
+
+      const insertStart = performance.now()
+      const homeRows = props.rowCount
+      await insertTestDataNonBlocking(db, homeRows, (current) => {
+        setState({ insertStatus: `Inserting… ${current}/${homeRows}` })
+      })
+
+      const insertDuration = performance.now() - insertStart
+      setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
 
       unsubscribeLive = () => liveQuery.unsubscribe()
       setState({
