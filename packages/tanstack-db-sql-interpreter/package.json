@@ -1,16 +1,31 @@
 {
   "name": "@menglinmaker/tanstack-db-sql-interpreter",
-  "private": true,
+  "private": false,
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "require": "./dist/index.cjs"
+    }
+  },
   "type": "module",
   "scripts": {
     "test:lint": "biome lint --write",
     "test:type": "tsgo",
-    "test:unit": "vitest run --coverage --changed origin/main"
+    "test:unit": "vitest run --coverage --changed origin/main",
+    "build": "tsup ./src/index.ts --format cjs,esm --dts --clean && attw --profile node16 --pack ."
   },
   "peerDependencies": {
     "@tanstack/db": "^0.5.25"
   },
   "dependencies": {
     "@menglinmaker/sql-parser": "workspace:*"
-  }
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  },
+  "version": "10.14.0"
 }

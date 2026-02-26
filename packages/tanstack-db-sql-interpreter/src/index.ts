@@ -38,3 +38,5 @@ export const liveQuerySql = (
   }
   return queryBuilder
 }
+
+export type { Collections }
