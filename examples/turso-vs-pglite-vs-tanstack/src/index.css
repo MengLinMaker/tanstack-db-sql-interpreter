@@ -85,7 +85,7 @@ h1 {
 }
 
 button {
-  border-radius: 62.4rem;
+  border-radius: 0;
   border: 1px solid var(--stroke);
   padding: 0.8rem;
   font-size: 15px;
@@ -102,6 +102,17 @@ button {
 .example-button {
   padding: 0.5rem 0.8rem;
   font-size: 0.85rem;
+}
+
+.row-count-input {
+  margin-left: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--stroke);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+  font-size: 0.9rem;
+  width: 6rem;
 }
 
 button:hover {

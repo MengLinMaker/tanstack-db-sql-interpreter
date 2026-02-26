@@ -1,4 +1,4 @@
-import { onCleanup, onMount, useContext } from 'solid-js'
+import { createEffect, onCleanup, onMount, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
@@ -123,7 +123,7 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
           const duration = performance.now() - startedAt
           setState({ queryStatus: `Last query: ${duration.toFixed(1)} ms` })
         })
-      }, 1000)
+      }, 100)
 
       unsubscribeLive = () => liveQuery.unsubscribe()
       setState({
@@ -154,6 +154,21 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
         errorStatus: message,
       })
     }
+  })
+
+  createEffect(() => {
+    props.query
+    props.rowCount
+    void clearLive()
+    setState({
+      insertStatus: '',
+      seedStatus: '',
+      errorStatus: '',
+      isRunning: false,
+      testStatus: '',
+      isFinished: false,
+      queryStatus: '',
+    })
   })
 
   return (

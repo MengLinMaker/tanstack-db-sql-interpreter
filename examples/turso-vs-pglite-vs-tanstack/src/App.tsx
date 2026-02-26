@@ -5,6 +5,7 @@ import { TanstackDB } from './components/database/tanstackDB.tsx'
 import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
+import { TestPgliteDB } from './components/test/TestPgliteDB.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
 const sqlExamples = {
@@ -44,6 +45,7 @@ ORDER BY homes DESC`,
 
 export default function App() {
   const [sql, setSql] = createSignal(Object.values(sqlExamples)[0]!)
+  const [rowCount, setRowCount] = createSignal(1000)
 
   return (
     <div class="page">
@@ -56,8 +58,22 @@ export default function App() {
       </section>
 
       <section class="card">
-        <h2>View SQL</h2>
+        <h2>Test configuration</h2>
         <p class="example-label">Select an example to load into the editor:</p>
+        <label class="example-label">
+          Row count
+          <input
+            class="row-count-input"
+            type="text"
+            inputmode="numeric"
+            value={rowCount()}
+            onInput={(event) => {
+              const next = Number.parseInt(event.currentTarget.value, 10)
+              if (Number.isNaN(next) || next < 0) return
+              setRowCount(next)
+            }}
+          />
+        </label>
         <div class="actions">
           {Object.entries(sqlExamples).map(([label, query]) => (
             <button
@@ -73,11 +89,11 @@ export default function App() {
       </section>
 
       <section class="grid">
-        <article class="card">
-          <h2>Pglite</h2>
-          <p class="subtitle">Single thread Postgres in WASM</p>
+        <article>
           <PgliteDB.Provider value={PgliteDB.defaultValue}>
-            <PgliteSchemaMigrator>hello</PgliteSchemaMigrator>
+            <PgliteSchemaMigrator>
+              <TestPgliteDB query={sql()} rowCount={rowCount()} />
+            </PgliteSchemaMigrator>
           </PgliteDB.Provider>
         </article>
 
