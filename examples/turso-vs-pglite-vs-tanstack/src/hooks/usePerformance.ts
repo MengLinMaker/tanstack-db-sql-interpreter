@@ -16,7 +16,6 @@ export function usePerformance(intervalMs = 1000) {
   const [usedMb, setUsedMb] = createSignal(0)
   const [limitMb, setLimitMb] = createSignal(0)
 
-
   onMount(() => {
     const perfWithMemory = performance as Performance & {
       memory?: PerformanceMemory
