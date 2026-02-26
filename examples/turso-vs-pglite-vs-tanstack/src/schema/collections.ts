@@ -54,6 +54,7 @@ for (const [key, tableSchema] of Object.entries(schemaZod)) {
     schema: tableSchema,
     getKey: (collection) => collection.id,
     sync: { sync: () => {} },
+    onInsert: async () => {},
   })
 }
 export { collections }

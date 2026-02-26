@@ -6,6 +6,7 @@ import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
 import { TestPgliteDB } from './components/test/TestPgliteDB.tsx'
+import { TestTanstackDB } from './components/test/testTanstackDB.tsx'
 import { TestTursoDB } from './components/test/testTursoDB.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
@@ -106,11 +107,9 @@ export default function App() {
           </TursoDB.Provider>
         </article>
 
-        <article class="card">
-          <h2>Tanstack db</h2>
-          <p class="subtitle">TypeScipt database kit</p>
+        <article>
           <TanstackDB.Provider value={TanstackDB.defaultValue}>
-            hello
+            <TestTanstackDB query={sql()} rowCount={rowCount()} />
           </TanstackDB.Provider>
         </article>
       </section>
