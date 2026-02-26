@@ -44,7 +44,7 @@ const insertTestData = async (db: typeof PgliteDB.defaultValue) => {
   )
 }
 
-export function TestPgliteDB(props: { query: string }) {
+export function TestPgliteDB(props: { query: string; rowCount: number }) {
   const db = useContext(PgliteDB)
   const [state, setState] = createStore({
     insertStatus: '',
@@ -104,7 +104,7 @@ export function TestPgliteDB(props: { query: string }) {
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      const homeRows = 10000
+      const homeRows = props.rowCount
       for (let i = 0; i < homeRows; i++) {
         await insertTestData(db)
       }
