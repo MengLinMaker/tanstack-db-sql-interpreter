@@ -3,64 +3,102 @@ import { createStore } from 'solid-js/store'
 import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { PgliteDB } from '../database/pgliteDB.tsx'
-
-const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
-  for (const row of seed.home_feature_table) {
-    await db.query(
-      `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT DO NOTHING`,
-      [row.id, row.bed_quantity, row.bath_quantity, row.car_quantity],
-    )
-  }
-  for (const row of seed.locality_table) {
-    await db.query(
-      `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT DO NOTHING`,
-      [row.id, row.suburb_name, row.postcode, row.state_abbreviation],
-    )
-  }
-}
-const insertTestData = async (db: typeof PgliteDB.defaultValue) => {
-  const row = generate.home_table()
-  await db.query(
-    `INSERT INTO home_table (
-             id,
-             locality_table_id,
-             home_feature_table_id,
-             street_address,
-             higher_price_aud
-           )
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT DO NOTHING`,
-    [
-      row.id,
-      row.locality_table_id,
-      row.home_feature_table_id,
-      row.street_address,
-      row.higher_price_aud,
-    ],
-  )
-}
+import { TestTemplate } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => resolve())
   })
 
+const insertBatch = async (
+  db: typeof PgliteDB.defaultValue,
+  table: string,
+  columns: string[],
+  rows: Array<Array<unknown>>,
+) => {
+  if (rows.length === 0) return
+  const columnList = columns.join(', ')
+  const placeholders: string[] = []
+  const params: unknown[] = []
+  rows.forEach((row, rowIndex) => {
+    const offset = rowIndex * columns.length
+    const rowPlaceholders = columns
+      .map((_, colIndex) => `$${offset + colIndex + 1}`)
+      .join(', ')
+    placeholders.push(`(${rowPlaceholders})`)
+    params.push(...row)
+  })
+  await db.query(
+    `INSERT INTO ${table} (${columnList})
+     VALUES ${placeholders.join(', ')}
+     ON CONFLICT DO NOTHING`,
+    params,
+  )
+}
+
+const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
+  const batchSize = 1000
+  for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
+    const batch = seed.home_feature_table.slice(i, i + batchSize)
+    await insertBatch(
+      db,
+      'home_feature_table',
+      ['id', 'bed_quantity', 'bath_quantity', 'car_quantity'],
+      batch.map((row) => [
+        row.id,
+        row.bed_quantity,
+        row.bath_quantity,
+        row.car_quantity,
+      ]),
+    )
+    await yieldToUi()
+  }
+  for (let i = 0; i < seed.locality_table.length; i += batchSize) {
+    const batch = seed.locality_table.slice(i, i + batchSize)
+    await insertBatch(
+      db,
+      'locality_table',
+      ['id', 'suburb_name', 'postcode', 'state_abbreviation'],
+      batch.map((row) => [
+        row.id,
+        row.suburb_name,
+        row.postcode,
+        row.state_abbreviation,
+      ]),
+    )
+    await yieldToUi()
+  }
+}
+
 const insertTestDataNonBlocking = async (
   db: typeof PgliteDB.defaultValue,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
-  const yieldEvery = 50
-  for (let i = 0; i < count; i++) {
-    await insertTestData(db)
-    onProgress?.(i + 1)
-    if ((i + 1) % yieldEvery === 0) {
-      await yieldToUi()
+  const batchSize = 1000
+  const columns = [
+    'id',
+    'locality_table_id',
+    'home_feature_table_id',
+    'street_address',
+    'higher_price_aud',
+  ]
+  for (let i = 0; i < count; i += batchSize) {
+    const batchCount = Math.min(batchSize, count - i)
+    const rows: Array<Array<unknown>> = []
+    for (let j = 0; j < batchCount; j++) {
+      const row = generate.home_table()
+      rows.push([
+        row.id,
+        row.locality_table_id,
+        row.home_feature_table_id,
+        row.street_address,
+        row.higher_price_aud,
+      ])
     }
+    await insertBatch(db, 'home_table', columns, rows)
+    onProgress?.(i + batchCount)
+    await yieldToUi()
   }
 }
 
@@ -102,6 +140,7 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
   }
 
   const runTest = async () => {
+    let inTransaction = false
     setState({
       isRunning: true,
       isFinished: false,
@@ -116,6 +155,8 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
       await clearLive()
 
       await db.exec(sqlSchema)
+      await db.exec('BEGIN')
+      inTransaction = true
 
       const seedStart = performance.now()
       await seedTestData(db)
@@ -133,7 +174,7 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
           const duration = performance.now() - startedAt
           setState({ queryStatus: `${duration.toFixed(1)} ms` })
         })
-      }, 1000)
+      }, 200)
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
@@ -141,6 +182,8 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
         setState({ insertStatus: `Inserting… ${current}/${homeRows}` })
       })
 
+      await db.exec('COMMIT')
+      inTransaction = false
       const insertDuration = performance.now() - insertStart
       setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
 
@@ -150,6 +193,13 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
         isFinished: true,
       })
     } catch (error) {
+      if (inTransaction) {
+        try {
+          await db.exec('ROLLBACK')
+        } catch {
+          // Ignore rollback failures to preserve the original error.
+        }
+      }
       const message = error instanceof Error ? error.message : String(error)
       setState({
         errorStatus: message,
@@ -191,24 +241,13 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
   })
 
   return (
-    <div class="test">
-      <h2>Pglite</h2>
-      <p class="subtitle">Single thread Postgres in WASM</p>
-      {!state.isRunning && !state.isFinished ? (
-        <button type="button" onClick={() => void runTest()}>
-          Start test
-        </button>
-      ) : null}
-      <table>
-        <tbody>
-          {tableRows().map((row) => (
-            <tr>
-              <td>{row.label}</td>
-              <td>{row.value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <TestTemplate
+      title="Pglite"
+      subtitle="Single thread Postgres in WASM"
+      isRunning={state.isRunning}
+      isFinished={state.isFinished}
+      onStart={() => void runTest()}
+      rows={tableRows()}
+    />
   )
 }
