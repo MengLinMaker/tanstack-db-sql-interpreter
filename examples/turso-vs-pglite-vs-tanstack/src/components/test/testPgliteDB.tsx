@@ -3,36 +3,45 @@ import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { PgliteDB } from '../database/pgliteDB.tsx'
 
+const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
+  for (const row of seed.home_feature_table) {
+    await db.query(
+      `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT DO NOTHING`,
+      [row.id, row.bed_quantity, row.bath_quantity, row.car_quantity],
+    )
+  }
+  for (const row of seed.locality_table) {
+    await db.query(
+      `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT DO NOTHING`,
+      [row.id, row.suburb_name, row.postcode, row.state_abbreviation],
+    )
+  }
+}
+
 export function TestPgliteDB(props: { query: string }) {
   const db = useContext(PgliteDB)
   const [rows, setRows] = createSignal<Array<Record<string, unknown>>>([])
   const [status, setStatus] = createSignal('Initializing…')
   const [insertStatus, setInsertStatus] = createSignal('')
+  const [seedStatus, setSeedStatus] = createSignal('')
 
   onMount(async () => {
     try {
       await db.waitReady
       await db.exec(sqlSchema)
 
+      const seedStart = performance.now()
+      await seedTestData(db)
+      const seedDuration = performance.now() - seedStart
+      setSeedStatus(
+        `Seeded ${seed.home_feature_table.length + seed.locality_table.length} rows in ${seedDuration.toFixed(1)} ms`,
+      )
+
       const insertStart = performance.now()
-
-      for (const row of seed.home_feature_table) {
-        await db.query(
-          `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT DO NOTHING`,
-          [row.id, row.bed_quantity, row.bath_quantity, row.car_quantity],
-        )
-      }
-      for (const row of seed.locality_table) {
-        await db.query(
-          `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT DO NOTHING`,
-          [row.id, row.suburb_name, row.postcode, row.state_abbreviation],
-        )
-      }
-
       const homeRows = 1000
       for (let i = 0; i < homeRows; i++) {
         const row = generate.home_table()
@@ -89,6 +98,7 @@ export function TestPgliteDB(props: { query: string }) {
   return (
     <div>
       <p>{status()}</p>
+      <p>{seedStatus()}</p>
       <p>{insertStatus()}</p>
       <pre>{JSON.stringify(rows(), null, 2)}</pre>
     </div>
