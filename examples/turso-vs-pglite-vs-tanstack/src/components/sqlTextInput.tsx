@@ -1,18 +1,15 @@
 import { indentWithTab } from '@codemirror/commands'
 import { sql } from '@codemirror/lang-sql'
-import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { basicSetup } from 'codemirror'
 import { createEffect, onCleanup, onMount } from 'solid-js'
+import { schema } from '../schema/collections'
 
-type SqlTextInputProps = {
+export function SqlTextInput(props: {
   value?: string
   onChange?: (value: string) => void
-  readOnly?: boolean
   class?: string
-}
-
-export function SqlTextInput(props: SqlTextInputProps) {
+}) {
   let host: HTMLDivElement | undefined
   let view: EditorView | undefined
 
@@ -22,18 +19,13 @@ export function SqlTextInput(props: SqlTextInputProps) {
   onMount(() => {
     const extensions = [
       basicSetup,
-      sql(),
+      sql({ schema }),
       keymap.of([indentWithTab]),
       EditorView.updateListener.of((update) => {
         if (!update.docChanged) return
         props.onChange?.(update.state.doc.toString())
       }),
     ]
-
-    if (props.readOnly) {
-      extensions.push(EditorState.readOnly.of(true))
-      extensions.push(EditorView.editable.of(false))
-    }
 
     view = new EditorView({
       parent: host!,
