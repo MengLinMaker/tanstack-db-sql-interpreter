@@ -242,7 +242,7 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
 
   return (
     <TestTemplate
-      title="Pglite live query"
+      title="Pglite query"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}

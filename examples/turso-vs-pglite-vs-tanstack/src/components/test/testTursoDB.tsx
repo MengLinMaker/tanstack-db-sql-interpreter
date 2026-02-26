@@ -228,7 +228,7 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
 
   return (
     <TestTemplate
-      title="Turso IVM materialised view"
+      title="Turso query"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}
