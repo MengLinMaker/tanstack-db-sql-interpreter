@@ -21,9 +21,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['@electric-sql/pglite', '@electric-sql/pglite/worker'],
   },
-  // build: {
-  //   rollupOptions: {
-  //     external: ['@electric-sql/pglite']
-  //   }
-  // }
+  worker: {
+    format: 'es',
+  },
 })
