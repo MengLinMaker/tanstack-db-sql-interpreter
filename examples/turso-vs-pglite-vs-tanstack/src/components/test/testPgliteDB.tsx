@@ -22,6 +22,27 @@ const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
     )
   }
 }
+const insertTestData = async (db: typeof PgliteDB.defaultValue) => {
+  const row = generate.home_table()
+  await db.query(
+    `INSERT INTO home_table (
+             id,
+             locality_table_id,
+             home_feature_table_id,
+             street_address,
+             higher_price_aud
+           )
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT DO NOTHING`,
+    [
+      row.id,
+      row.locality_table_id,
+      row.home_feature_table_id,
+      row.street_address,
+      row.higher_price_aud,
+    ],
+  )
+}
 
 export function TestPgliteDB(props: { query: string }) {
   const db = useContext(PgliteDB)
@@ -35,11 +56,15 @@ export function TestPgliteDB(props: { query: string }) {
     queryStatus: '',
   })
   const tableRows = () => [
-    { label: 'Status', value: state.testStatus || 'Idle' },
+    {
+      label: 'Status',
+      value: state.errorStatus
+        ? `Test failed: ${state.errorStatus}`
+        : state.testStatus || 'Idle',
+    },
     { label: 'Query time', value: state.queryStatus || '—' },
-    { label: 'Seed data', value: state.seedStatus || '—' },
-    { label: 'Insert data', value: state.insertStatus || '—' },
-    { label: 'Failure', value: state.errorStatus || '—' },
+    { label: 'Seed time', value: state.seedStatus || '—' },
+    { label: 'Insert time', value: state.insertStatus || '—' },
   ]
 
   let refreshTimer: number | undefined
@@ -76,57 +101,27 @@ export function TestPgliteDB(props: { query: string }) {
       const seedStart = performance.now()
       await seedTestData(db)
       const seedDuration = performance.now() - seedStart
-      setState({
-        seedStatus: `Seeded ${seed.home_feature_table.length + seed.locality_table.length} rows in ${seedDuration.toFixed(1)} ms`,
-      })
+      setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      const homeRows = 1000
+      const homeRows = 10000
       for (let i = 0; i < homeRows; i++) {
-        const row = generate.home_table()
-        await db.query(
-          `INSERT INTO home_table (
-             id,
-             locality_table_id,
-             home_feature_table_id,
-             street_address,
-             higher_price_aud
-           )
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT DO NOTHING`,
-          [
-            row.id,
-            row.locality_table_id,
-            row.home_feature_table_id,
-            row.street_address,
-            row.higher_price_aud,
-          ],
-        )
+        await insertTestData(db)
       }
 
       const insertDuration = performance.now() - insertStart
-      setState({
-        insertStatus: `Inserted ${seed.home_feature_table.length + seed.locality_table.length + homeRows} rows in ${insertDuration.toFixed(1)} ms`,
-      })
+      setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
 
       const liveQuery = await db.live.query({
         query: props.query,
-        callback: () => {
-          // Results are intentionally not rendered to avoid UI blocking.
-        },
-      })
-
-      setState({
-        queryStatus: `Last query: initial results (${liveQuery.initialResults.rows.length} rows)`,
+        callback: () => {}, // Results are intentionally not rendered to avoid UI blocking.
       })
 
       refreshTimer = window.setInterval(() => {
         const startedAt = performance.now()
         void liveQuery.refresh().then(() => {
           const duration = performance.now() - startedAt
-          setState({
-            queryStatus: `Last query: ${duration.toFixed(1)} ms`,
-          })
+          setState({ queryStatus: `Last query: ${duration.toFixed(1)} ms` })
         })
       }, 1000)
 
