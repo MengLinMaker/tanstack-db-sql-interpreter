@@ -6,6 +6,7 @@ import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
 import { TestPgliteDB } from './components/test/TestPgliteDB.tsx'
+import { TestTursoDB } from './components/test/testTursoDB.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
 const sqlExamples = {
@@ -97,11 +98,11 @@ export default function App() {
           </PgliteDB.Provider>
         </article>
 
-        <article class="card">
-          <h2>Turso</h2>
-          <p class="subtitle">SQLite rust rewrite in WASM</p>
+        <article>
           <TursoDB.Provider value={TursoDB.defaultValue}>
-            <TursoSchemaMigrator>hello</TursoSchemaMigrator>
+            <TursoSchemaMigrator>
+              <TestTursoDB query={sql()} rowCount={rowCount()} />
+            </TursoSchemaMigrator>
           </TursoDB.Provider>
         </article>
 
