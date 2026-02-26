@@ -1,9 +1,10 @@
 import { faker, fakerEN_AU } from '@faker-js/faker'
 import type { z } from 'zod/mini'
-import type { schema } from '../schema/collections.ts'
+import type { schemaZod } from '../schema/collections.ts'
 
-const possible_home_feature_table: z.infer<typeof schema.home_feature_table>[] =
-  []
+const possible_home_feature_table: z.infer<
+  typeof schemaZod.home_feature_table
+>[] = []
 {
   let count = 1
   for (let bed = 1; bed < 5; bed++) {
@@ -20,7 +21,7 @@ const possible_home_feature_table: z.infer<typeof schema.home_feature_table>[] =
   }
 }
 
-const possible_locality_table: z.infer<typeof schema.locality_table>[] = []
+const possible_locality_table: z.infer<typeof schemaZod.locality_table>[] = []
 {
   let count = 1
   for (let bed = 1; bed < 1000; bed++) {
@@ -48,6 +49,11 @@ export const generate = {
       }),
       street_address: fakerEN_AU.location.streetAddress(),
       higher_price_aud: faker.number.int({ min: 100000, max: 1000000 }),
-    } satisfies z.infer<typeof schema.home_table>
+    } satisfies z.infer<typeof schemaZod.home_table>
   },
+}
+
+export const seed = {
+  home_feature_table: possible_home_feature_table,
+  locality_table: possible_locality_table,
 }
