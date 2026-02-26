@@ -1,7 +1,7 @@
 import { connect } from '@tursodatabase/database-wasm/vite'
 import { createContext } from 'solid-js'
 
-const db = await connect('local.db', {
+const db = await connect('local.benchmark.db', {
   timeout: 1000,
   // experimental: ['views'],
 })
