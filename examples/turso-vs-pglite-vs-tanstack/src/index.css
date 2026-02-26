@@ -211,6 +211,21 @@ ul {
   font-weight: 600;
 }
 
+.sql-input {
+  border: 1px solid var(--stroke);
+}
+
+.sql-input .cm-editor {
+  font-family:
+    ui-monospace, "SFMono-Regular", "Cascadia Code", "Menlo", "Consolas",
+    "Liberation Mono", monospace;
+  font-size: 0.95rem;
+}
+
+.sql-input .cm-scroller {
+  overscroll-behavior: contain;
+}
+
 @media (max-width: 45rem) {
   .hero {
     padding: 1.5rem;
