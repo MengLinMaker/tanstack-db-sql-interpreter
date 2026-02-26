@@ -1,10 +1,10 @@
 import { createSignal } from 'solid-js'
-import { PgliteDB } from './components/pgliteDB.tsx'
-import { PgliteSchemaMigrator } from './components/pgliteSchemaMigrator.tsx'
+import { PgliteDB } from './components/database/pgliteDB.tsx'
+import { PgliteSchemaMigrator } from './components/database/pgliteSchemaMigrator.tsx'
+import { TanstackDB } from './components/database/tanstackDB.tsx'
+import { TursoDB } from './components/database/tursoDB.tsx'
+import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
-import { TanstackDB } from './components/tanstackDB.tsx'
-import { TursoDB } from './components/tursoDB.tsx'
-import { TursoSchemaMigrator } from './components/tursoSchemaMigrator.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
 const sqlExamples = {
