@@ -1,11 +1,24 @@
+import { createSignal } from 'solid-js'
 import { PgliteDB } from './components/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './components/pgliteSchemaMigrator.tsx'
+import { SqlTextInput } from './components/sqlTextInput.tsx'
 import { TanstackDB } from './components/tanstackDB.tsx'
 import { TursoDB } from './components/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/tursoSchemaMigrator.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
+const sqlExamples = {
+  'count all': `SELECT
+  COUNT(*) AS count_home,
+  MIN(h.higher_price_aud) AS min_price,
+  AVG(h.higher_price_aud) AS avg_price,
+  MAX(h.higher_price_aud) AS max_price
+FROM home_table h`,
+}
+
 export default function App() {
+  const [sql, setSql] = createSignal(Object.values(sqlExamples)[0]!)
+
   return (
     <div class="page">
       <section>
@@ -19,6 +32,11 @@ export default function App() {
 
       <section>
         <UsageMonitor intervalMs={100}></UsageMonitor>
+      </section>
+
+      <section class="card">
+        <h2>View SQL</h2>
+        <SqlTextInput value={sql()} onChange={setSql} />
       </section>
 
       <section class="grid">
