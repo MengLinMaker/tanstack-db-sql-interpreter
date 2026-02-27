@@ -1,12 +1,22 @@
-// import type { Collections } from '@menglinmaker/tanstack-db-sql-interpreter'
-
-// import { Collections } from '@menglinmaker/tanstack-db-sql-interpreter'
-import type { Collection } from '@tanstack/db'
+import { type Collection, createCollection } from '@tanstack/db'
 import { createContext } from 'solid-js'
-import { collections } from '../../schema/collections.ts'
+import { schemaZod } from '../../schema/collections'
 
-type Collections = {
-  [key: string]: Collection<any, any, any, any, any>
+export const tanstackDbFactory = () => {
+  const collections: {
+    [key: string]: Collection<any, any, any, any, any>
+  } = {}
+  for (const [key, tableSchema] of Object.entries(schemaZod)) {
+    collections[key] = createCollection({
+      schema: tableSchema,
+      getKey: (collection) => collection.id,
+      sync: { sync: () => {} },
+      onInsert: async () => {},
+    })
+  }
+  return collections
 }
 
-export const TanstackDB = createContext<Collections>(collections)
+export const TanstackDB = createContext<ReturnType<typeof tanstackDbFactory>>(
+  tanstackDbFactory(),
+)

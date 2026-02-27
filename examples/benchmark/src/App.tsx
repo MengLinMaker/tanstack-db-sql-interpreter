@@ -1,10 +1,13 @@
-import { createSignal } from 'solid-js'
+import { createResource, createSignal } from 'solid-js'
 import { PgliteDB, pgliteFactory } from './components/database/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './components/database/pgliteSchemaMigrator.tsx'
-import { SqliteDB } from './components/database/sqliteDB.tsx'
+import { SqliteDB, sqliteFactory } from './components/database/sqliteDB.tsx'
 import { SqliteSchemaMigrator } from './components/database/sqliteSchemaMigrator.tsx'
-import { TanstackDB } from './components/database/tanstackDB.tsx'
-import { TursoDB } from './components/database/tursoDB.tsx'
+import {
+  TanstackDB,
+  tanstackDbFactory,
+} from './components/database/tanstackDB.tsx'
+import { TursoDB, tursoFactory } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
 import { TestPgliteDbIvm } from './components/test/testPgliteDbIvm.tsx'
@@ -27,6 +30,8 @@ export default function App() {
     setRowCount(defaultRowCount)
     await clearOpfs()
   }
+
+  const [tursoQueryDb] = createResource(tursoFactory)
 
   return (
     <div class="page">
@@ -78,7 +83,7 @@ export default function App() {
         </article>
 
         <article>
-          <TanstackDB.Provider value={TanstackDB.defaultValue}>
+          <TanstackDB.Provider value={tanstackDbFactory()}>
             <TestTanstackDbIvm query={sql()} rowCount={rowCount()} />
           </TanstackDB.Provider>
         </article>
@@ -100,7 +105,7 @@ export default function App() {
         </article>
 
         <article>
-          <TursoDB.Provider value={TursoDB.defaultValue}>
+          <TursoDB.Provider value={tursoQueryDb.latest!}>
             <TursoSchemaMigrator>
               <TestTursoDbQuery query={sql()} rowCount={rowCount()} />
             </TursoSchemaMigrator>
@@ -108,7 +113,7 @@ export default function App() {
         </article>
 
         <article>
-          <SqliteDB.Provider value={SqliteDB.defaultValue}>
+          <SqliteDB.Provider value={sqliteFactory()}>
             <SqliteSchemaMigrator>
               <TestSqliteQuery query={sql()} rowCount={rowCount()} />
             </SqliteSchemaMigrator>

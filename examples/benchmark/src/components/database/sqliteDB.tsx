@@ -1,6 +1,6 @@
 import { createContext } from 'solid-js'
 import { SQLocal } from 'sqlocal'
 
-const db = new SQLocal(`sqlite.benchmark.${new Date().toISOString()}.sqlite3`)
+export const sqliteFactory = () => new SQLocal(':memory:')
 
-export const SqliteDB = createContext(db)
+export const SqliteDB = createContext(sqliteFactory())

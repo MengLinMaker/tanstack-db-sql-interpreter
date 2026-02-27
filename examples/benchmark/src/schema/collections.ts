@@ -1,4 +1,4 @@
-import { type Collection, createCollection } from '@tanstack/db'
+import { createCollection } from '@tanstack/db'
 import * as z from 'zod/mini'
 
 export const schemaZod = {
@@ -45,16 +45,3 @@ export const home_table = createCollection({
   getKey: (collection) => collection.id,
   sync: { sync: () => {} },
 })
-
-const collections: {
-  [key: string]: Collection<any, any, any, any, any>
-} = {}
-for (const [key, tableSchema] of Object.entries(schemaZod)) {
-  collections[key] = createCollection({
-    schema: tableSchema,
-    getKey: (collection) => collection.id,
-    sync: { sync: () => {} },
-    onInsert: async () => {},
-  })
-}
-export { collections }
