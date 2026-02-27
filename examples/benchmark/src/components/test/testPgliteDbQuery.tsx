@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, onMount, useContext } from 'solid-js'
+import { createEffect, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
@@ -206,17 +206,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       })
     }
   }
-
-  onMount(async () => {
-    try {
-      onCleanup(() => {})
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setState({
-        errorStatus: message,
-      })
-    }
-  })
 
   createEffect(() => {
     props.query
