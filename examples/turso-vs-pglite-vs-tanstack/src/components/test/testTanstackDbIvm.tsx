@@ -26,6 +26,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     testStatus: '',
     isFinished: false,
     queryStatus: '',
+    insertProgress: 0,
   })
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [liveCollection, setLiveCollection] = createSignal<Collection>()
@@ -71,7 +72,6 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   }
 
   const runTest = async () => {
-    let finished = false
     setState({
       isRunning: true,
       isFinished: false,
@@ -80,6 +80,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       seedStatus: '',
       insertStatus: '',
       queryStatus: '',
+      insertProgress: 0,
     })
     // Prime the schema with a transaction-backed insert.
     await insertBatch('home_table', [generate.home_table()])
@@ -95,13 +96,19 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       const insertStart = performance.now()
       const homeRows = props.rowCount
       await insertTestDataNonBlocking(homeRows, (current) => {
-        setState({ insertStatus: `Inserting… ${current}/${homeRows}` })
+        const progress = Math.min(100, (current / homeRows) * 100)
+        setState({
+          insertStatus: `Inserting… ${current}/${homeRows}`,
+          insertProgress: progress,
+        })
       })
       const insertDuration = performance.now() - insertStart
-      setState({ insertStatus: `${insertDuration.toFixed(2)} ms` })
-      finished = true
       setState({
-        testStatus: 'Test finished',
+        insertStatus: `${insertDuration.toFixed(2)} ms`,
+        insertProgress: 100,
+      })
+      setState({
+        testStatus: 'Finished',
         isFinished: true,
       })
 
@@ -125,13 +132,9 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
         void Promise.resolve().then(() => {
           const duration = performance.now() - startedAt
           setState({ queryStatus: `${duration.toFixed(2)} ms` })
-          if (!hasMeasured && !finished) {
+          if (!hasMeasured) {
             hasMeasured = true
             clearRefresh()
-            setState({
-              testStatus: 'Test finished',
-              isFinished: true,
-            })
           }
         })
       }, 200)
@@ -168,6 +171,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       testStatus: '',
       isFinished: false,
       queryStatus: '',
+      insertProgress: 0,
     })
   })
 
@@ -180,7 +184,11 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     },
     { label: 'Query time', value: state.queryStatus || '—' },
     { label: 'Seed time', value: state.seedStatus || '—' },
-    { label: 'Insert time', value: state.insertStatus || '—' },
+    {
+      label: 'Insert time',
+      value: state.insertStatus || '—',
+      barPercent: state.insertProgress,
+    },
   ]
 
   return (

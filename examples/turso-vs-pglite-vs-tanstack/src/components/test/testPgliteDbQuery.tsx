@@ -112,6 +112,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
     testStatus: '',
     isFinished: false,
     queryStatus: '',
+    insertProgress: 0,
   })
   const tableRows = () => [
     {
@@ -122,7 +123,11 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
     },
     { label: 'Query time', value: state.queryStatus || '—' },
     { label: 'Seed time', value: state.seedStatus || '—' },
-    { label: 'Insert time', value: state.insertStatus || '—' },
+    {
+      label: 'Insert time',
+      value: state.insertStatus || '—',
+      barPercent: state.insertProgress,
+    },
   ]
 
   let refreshTimer: number | undefined
@@ -179,18 +184,25 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       const insertStart = performance.now()
       const homeRows = props.rowCount
       await insertTestDataNonBlocking(db, homeRows, (current) => {
-        setState({ insertStatus: `Inserting… ${current}/${homeRows}` })
+        const progress = Math.min(100, (current / homeRows) * 100)
+        setState({
+          insertStatus: `Inserting… ${current}/${homeRows}`,
+          insertProgress: progress,
+        })
       })
 
       await db.exec('COMMIT')
       inTransaction = false
       const insertDuration = performance.now() - insertStart
-      setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
+      setState({
+        insertStatus: `${insertDuration.toFixed(1)} ms`,
+        insertProgress: 100,
+      })
 
       unsubscribeLive = () => liveQuery.unsubscribe()
       await clearLive()
       setState({
-        testStatus: 'Test finished',
+        testStatus: 'Finished',
         isFinished: true,
       })
     } catch (error) {
@@ -238,6 +250,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       testStatus: '',
       isFinished: false,
       queryStatus: '',
+      insertProgress: 0,
     })
   })
 

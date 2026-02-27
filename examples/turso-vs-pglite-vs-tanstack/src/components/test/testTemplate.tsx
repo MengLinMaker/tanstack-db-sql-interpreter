@@ -8,6 +8,7 @@ export function TestTemplate(props: {
   rows: {
     label: string
     value: string
+    barPercent?: number
   }[]
 }) {
   let dialog: HTMLDialogElement | undefined
@@ -39,7 +40,16 @@ export function TestTemplate(props: {
           {props.rows.map((row) => (
             <tr>
               <td>{row.label}</td>
-              <td>{row.value}</td>
+              {row.barPercent === undefined ? (
+                <td>{row.value}</td>
+              ) : (
+                <td
+                  class="usage-cell"
+                  style={{ '--bar-width': `${row.barPercent}%` }}
+                >
+                  {row.value}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
