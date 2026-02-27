@@ -1,4 +1,4 @@
-import { createEffect, useContext } from 'solid-js'
+import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { PgliteDB } from '../database/pgliteDB.tsx'
@@ -118,6 +118,7 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
     queryStatus: '',
     insertProgress: 0,
   })
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const tableRows = () => [
     {
       label: 'Status',
@@ -152,6 +153,17 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
+      const liveQuery = await db.live.incrementalQuery(
+        props.query,
+        [],
+        'id',
+        (res) => {
+          setQueryResult(res.rows)
+        },
+      )
+      liveQuery.subscribe((result) => {
+        setQueryResult(result.rows)
+      })
       const homeRows = props.rowCount
       await insertTestDataNonBlocking(db, homeRows, (current) => {
         const progress = Math.min(100, (current / homeRows) * 100)
@@ -168,7 +180,7 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
       })
 
       const queryStart = performance.now()
-      await db.query(props.query)
+      await liveQuery.unsubscribe()
       const queryDuration = performance.now() - queryStart
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
 
@@ -224,10 +236,7 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={async () => {
-        const result = await db.query(props.query)
-        return JSON.stringify(result.rows, null, 2)
-      }}
+      onShowResults={() => JSON.stringify(queryResult(), null, 2)}
       rows={tableRows()}
     />
   )
