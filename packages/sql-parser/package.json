@@ -9,7 +9,7 @@
     "test:lint": "biome lint --write",
     "test:type": "tsgo",
     "test:unit": "vitest run --coverage --changed origin/main",
-    "build": "node ./src/gen.ts"
+    "build": "tsx ./src/gen.ts"
   },
   "devDependencies": {
     "@lezer/generator": "^1.8.0",
