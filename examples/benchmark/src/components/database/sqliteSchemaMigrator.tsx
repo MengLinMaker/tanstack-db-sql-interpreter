@@ -1,35 +1,23 @@
 import { createSignal, type JSX, onMount, Show, useContext } from 'solid-js'
 import { sqlSchema } from '../../schema/schema.sql.ts'
-import { SqlocalDB } from './sqlocalDB.tsx'
+import { SqliteDB } from './sqliteDB.tsx'
 
-type SqlocalSchemaMigratorProps = {
+type SqliteSchemaMigratorProps = {
   children: JSX.Element
 }
 
-const schemaStatements = sqlSchema
-  .split(';')
-  .map((statement) => statement.trim())
-  .filter(Boolean)
-
-export function SqlocalSchemaMigrator(props: SqlocalSchemaMigratorProps) {
-  const db = useContext(SqlocalDB)
+export function SqliteSchemaMigrator(props: SqliteSchemaMigratorProps) {
+  const db = useContext(SqliteDB)
   const [ready, setReady] = createSignal(false)
   const [error, setError] = createSignal<Error | null>(null)
 
   onMount(async () => {
     try {
-      console.log(await db.sql`SELECT 1`)
       await db.sql(sqlSchema)
-      // await db.batch((sql) =>
-      //   schemaStatements.map((statement) =>
-      //     sql([statement] as unknown as TemplateStringsArray),
-      //   ),
-      // )
       const tables =
         await db.sql`SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name;`
-      console.log(tables)
       if (!tables.length) {
-        throw Error(`SQLocal schema migration failed: no tables found`)
+        throw Error(`SQLite schema migration failed: no tables found`)
       }
       setReady(true)
     } catch (caught) {
@@ -43,8 +31,8 @@ export function SqlocalSchemaMigrator(props: SqlocalSchemaMigratorProps) {
       fallback={
         <div class="turso-migrator-status">
           {error()
-            ? `SQLocal migration failed: ${error()!.message}`
-            : 'Preparing SQLocal schema…'}
+            ? `SQLite migration failed: ${error()!.message}`
+            : 'Preparing SQLite schema…'}
         </div>
       }
     >

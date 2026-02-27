@@ -1,7 +1,7 @@
 import { createEffect, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
-import { SqlocalDB } from '../database/sqlocalDB.tsx'
+import { SqliteDB } from '../database/sqliteDB.tsx'
 import { TestTemplate } from './testTemplate.tsx'
 
 const yieldToUi = () =>
@@ -10,7 +10,7 @@ const yieldToUi = () =>
   })
 
 const insertHomeFeatureBatch = async (
-  db: typeof SqlocalDB.defaultValue,
+  db: typeof SqliteDB.defaultValue,
   rows: Array<{
     id: number
     bed_quantity: number
@@ -27,7 +27,7 @@ const insertHomeFeatureBatch = async (
   )
 
 const insertLocalityBatch = async (
-  db: typeof SqlocalDB.defaultValue,
+  db: typeof SqliteDB.defaultValue,
   rows: Array<{
     id: number
     suburb_name: string
@@ -44,7 +44,7 @@ const insertLocalityBatch = async (
   )
 
 const insertHomeBatch = async (
-  db: typeof SqlocalDB.defaultValue,
+  db: typeof SqliteDB.defaultValue,
   rows: Array<{
     id: number
     locality_table_id: number
@@ -61,7 +61,7 @@ const insertHomeBatch = async (
     ),
   )
 
-const seedTestData = async (db: typeof SqlocalDB.defaultValue) => {
+const seedTestData = async (db: typeof SqliteDB.defaultValue) => {
   const batchSize = 500
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     await insertHomeFeatureBatch(
@@ -77,7 +77,7 @@ const seedTestData = async (db: typeof SqlocalDB.defaultValue) => {
 }
 
 const insertTestDataNonBlocking = async (
-  db: typeof SqlocalDB.defaultValue,
+  db: typeof SqliteDB.defaultValue,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -91,7 +91,7 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = async (db: typeof SqlocalDB.defaultValue) => {
+const clearTables = async (db: typeof SqliteDB.defaultValue) => {
   await db.batch((sql) => [
     sql`DELETE FROM home_table`,
     sql`DELETE FROM locality_table`,
@@ -100,7 +100,7 @@ const clearTables = async (db: typeof SqlocalDB.defaultValue) => {
 }
 
 export function TestSqliteQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(SqlocalDB)
+  const db = useContext(SqliteDB)
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -211,8 +211,7 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
 
   return (
     <TestTemplate
-      title="SQLocal query"
-      subtitle="SQLite in WebAssembly (sqlocal)"
+      title="SQLite query"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

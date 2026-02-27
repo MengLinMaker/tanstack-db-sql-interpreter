@@ -1,8 +1,8 @@
-import { createSignal, onMount } from 'solid-js'
+import { createSignal } from 'solid-js'
 import { PgliteDB } from './components/database/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './components/database/pgliteSchemaMigrator.tsx'
-import { SqlocalDB } from './components/database/sqlocalDB.tsx'
-import { SqlocalSchemaMigrator } from './components/database/sqlocalSchemaMigrator.tsx'
+import { SqliteDB } from './components/database/sqliteDB.tsx'
+import { SqliteSchemaMigrator } from './components/database/sqliteSchemaMigrator.tsx'
 import { TanstackDB } from './components/database/tanstackDB.tsx'
 import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
@@ -21,10 +21,6 @@ export default function App() {
   const defaultRowCount = 10000
   const [sql, setSql] = createSignal(defaultSql)
   const [rowCount, setRowCount] = createSignal(defaultRowCount)
-
-  // onMount(async () => {
-  //   await clearOpfs()
-  // })
 
   const resetTestConfig = async () => {
     setSql(defaultSql)
@@ -112,11 +108,11 @@ export default function App() {
         </article>
 
         <article>
-          <SqlocalDB.Provider value={SqlocalDB.defaultValue}>
-            <SqlocalSchemaMigrator>
+          <SqliteDB.Provider value={SqliteDB.defaultValue}>
+            <SqliteSchemaMigrator>
               <TestSqliteQuery query={sql()} rowCount={rowCount()} />
-            </SqlocalSchemaMigrator>
-          </SqlocalDB.Provider>
+            </SqliteSchemaMigrator>
+          </SqliteDB.Provider>
         </article>
       </section>
     </div>
