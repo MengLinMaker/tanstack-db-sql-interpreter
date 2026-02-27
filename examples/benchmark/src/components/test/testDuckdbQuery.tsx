@@ -1,3 +1,4 @@
+import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm'
 import { createEffect, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
@@ -19,10 +20,7 @@ const normalizeRows = (result: unknown) => {
   return rows ?? (result as unknown[])
 }
 
-const queryDuckdbRows = async (
-  conn: { query: (sql: string) => Promise<unknown> },
-  sql: string,
-) => {
+const queryDuckdbRows = async (conn: AsyncDuckDBConnection, sql: string) => {
   const startedAt = performance.now()
   const result = await conn.query(sql)
   const rows = normalizeRows(result)
@@ -30,10 +28,7 @@ const queryDuckdbRows = async (
   return { rows, durationMs }
 }
 
-const getDuckdbRows = async (
-  conn: { query: (sql: string) => Promise<unknown> },
-  sql: string,
-) => {
+const getDuckdbRows = async (conn: AsyncDuckDBConnection, sql: string) => {
   const result = await conn.query(sql)
   return normalizeRows(result)
 }
@@ -46,13 +41,7 @@ const stringifyRows = (rows: unknown) =>
   )
 
 const insertBatch = async (
-  conn: {
-    query: (sql: string) => Promise<unknown>
-    prepare: (sql: string) => Promise<{
-      query: (...params: unknown[]) => Promise<unknown>
-      close: () => Promise<void>
-    }>
-  },
+  conn: AsyncDuckDBConnection,
   table: string,
   columns: string[],
   rows: Array<Array<unknown>>,
@@ -61,8 +50,7 @@ const insertBatch = async (
   const columnList = columns.join(', ')
   const placeholders: string[] = []
   const params: unknown[] = []
-  rows.forEach((row, rowIndex) => {
-    const offset = rowIndex * columns.length
+  rows.forEach((row) => {
     const rowPlaceholders = columns.map(() => `?`).join(', ')
     placeholders.push(`(${rowPlaceholders})`)
     params.push(...row)
@@ -75,13 +63,7 @@ const insertBatch = async (
   await stmt.close()
 }
 
-const seedTestData = async (conn: {
-  query: (sql: string) => Promise<unknown>
-  prepare: (sql: string) => Promise<{
-    query: (...params: unknown[]) => Promise<unknown>
-    close: () => Promise<void>
-  }>
-}) => {
+const seedTestData = async (conn: AsyncDuckDBConnection) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
@@ -116,13 +98,7 @@ const seedTestData = async (conn: {
 }
 
 const insertTestDataNonBlocking = async (
-  conn: {
-    query: (sql: string) => Promise<unknown>
-    prepare: (sql: string) => Promise<{
-      query: (...params: unknown[]) => Promise<unknown>
-      close: () => Promise<void>
-    }>
-  },
+  conn: AsyncDuckDBConnection,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -153,9 +129,7 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = async (conn: {
-  query: (sql: string) => Promise<unknown>
-}) => {
+const clearTables = async (conn: AsyncDuckDBConnection) => {
   await conn.query('DELETE FROM home_table')
   await conn.query('DELETE FROM locality_table')
   await conn.query('DELETE FROM home_feature_table')
@@ -185,10 +159,7 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
       queryStatus: '',
     })
 
-    let conn: {
-      query: (sql: string, params?: unknown[]) => Promise<unknown>
-      close: () => Promise<void>
-    } | null = null
+    let conn: AsyncDuckDBConnection | null = null
     try {
       conn = await db.connect()
       await clearTables(conn)
@@ -229,9 +200,7 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
         testStatus: 'Test failed',
       })
     } finally {
-      if (conn) {
-        await conn.close()
-      }
+      await conn?.close()
       setState({
         isRunning: false,
       })
@@ -278,9 +247,12 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
       onShowError={() => state.errorStatus}
       onShowResults={async () => {
         const conn = await db.connect()
-        const rows = await getDuckdbRows(conn, props.query)
-        await conn.close()
-        return stringifyRows(rows)
+        try {
+          const rows = await getDuckdbRows(conn, props.query)
+          return stringifyRows(rows)
+        } finally {
+          await conn.close()
+        }
       }}
       rows={tableRows()}
     />
