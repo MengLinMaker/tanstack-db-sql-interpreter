@@ -5,8 +5,10 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite serve",
+    "preview": "vite preview",
     "test:lint": "biome lint --write",
-    "test:type": "tsgo --noEmit"
+    "test:type": "tsgo --noEmit",
+    "build": "pnpm vite build"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.2",
