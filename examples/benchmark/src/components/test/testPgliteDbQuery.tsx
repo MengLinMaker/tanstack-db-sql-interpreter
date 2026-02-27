@@ -136,20 +136,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
     },
   ]
 
-  let refreshTimer: number | undefined
-  let unsubscribeLive: (() => Promise<void>) | undefined
-
-  const clearLive = async () => {
-    if (refreshTimer !== undefined) {
-      window.clearInterval(refreshTimer)
-      refreshTimer = undefined
-    }
-    if (unsubscribeLive) {
-      await unsubscribeLive()
-      unsubscribeLive = undefined
-    }
-  }
-
   const runTest = async () => {
     let inTransaction = false
     setState({
@@ -163,8 +149,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
-      await clearLive()
-
       await db.exec(sqlSchema)
       await db.exec('BEGIN')
       inTransaction = true
@@ -175,19 +159,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       await seedTestData(db)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
-
-      const liveQuery = await db.live.query({
-        query: props.query,
-        callback: () => {}, // Results are intentionally not rendered to avoid UI blocking.
-      })
-
-      refreshTimer = window.setInterval(() => {
-        const startedAt = performance.now()
-        void liveQuery.refresh().then(() => {
-          const duration = performance.now() - startedAt
-          setState({ queryStatus: `${duration.toFixed(1)} ms` })
-        })
-      }, 200)
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
@@ -207,8 +178,11 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
         insertProgress: 100,
       })
 
-      unsubscribeLive = () => liveQuery.unsubscribe()
-      await clearLive()
+      const queryStart = performance.now()
+      await db.query(props.query)
+      const queryDuration = performance.now() - queryStart
+      setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
+
       setState({
         testStatus: 'Finished',
         isFinished: true,
@@ -235,9 +209,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
 
   onMount(async () => {
     try {
-      onCleanup(async () => {
-        await clearLive()
-      })
+      onCleanup(() => {})
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setState({
@@ -249,7 +221,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
-    void clearLive()
     setState({
       insertStatus: '',
       seedStatus: '',

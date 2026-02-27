@@ -121,15 +121,6 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
     insertProgress: 0,
   })
 
-  let refreshTimer: number | undefined
-
-  const clearRefresh = () => {
-    if (refreshTimer !== undefined) {
-      window.clearInterval(refreshTimer)
-      refreshTimer = undefined
-    }
-  }
-
   const runTest = async () => {
     setState({
       isRunning: true,
@@ -142,8 +133,6 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
-      clearRefresh()
-
       await db.exec(sqlSchema)
       await db.exec('BEGIN')
 
@@ -153,15 +142,6 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
       await seedTestData(db)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
-
-      const queryStatement = db.prepare(props.query)
-      refreshTimer = window.setInterval(() => {
-        const startedAt = performance.now()
-        void queryStatement.all().then(() => {
-          const duration = performance.now() - startedAt
-          setState({ queryStatus: `${duration.toFixed(1)} ms` })
-        })
-      }, 200)
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
@@ -180,7 +160,12 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
         insertProgress: 100,
       })
 
-      clearRefresh()
+      const queryStatement = db.prepare(props.query)
+      const queryStart = performance.now()
+      await queryStatement.all()
+      const queryDuration = performance.now() - queryStart
+      setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
+
       setState({
         testStatus: 'Finished',
         isFinished: true,
@@ -205,9 +190,7 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
 
   onMount(async () => {
     try {
-      onCleanup(() => {
-        clearRefresh()
-      })
+      onCleanup(() => {})
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setState({
@@ -219,7 +202,6 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
-    clearRefresh()
     setState({
       insertStatus: '',
       seedStatus: '',
