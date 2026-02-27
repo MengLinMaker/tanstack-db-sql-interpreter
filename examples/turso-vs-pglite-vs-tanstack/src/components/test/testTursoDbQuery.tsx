@@ -160,7 +160,7 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
       await insertTestDataNonBlocking(db, homeRows, (current) => {
         const progress = Math.min(100, (current / homeRows) * 100)
         setState({
-          insertStatus: `Inserting… ${current}/${homeRows}`,
+          insertStatus: 'Inserting…',
           insertProgress: progress,
         })
       })
