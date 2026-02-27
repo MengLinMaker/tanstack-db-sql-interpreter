@@ -32,6 +32,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       const batch = seed.locality_table.slice(i, i + batchSize)
       insertBatch('locality_table', batch)
     }
+    insertBatch('home_table', [generate.home_table()])
   }
 
   const insertTestDataNonBlocking = async (
@@ -69,8 +70,6 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       queryStatus: '',
       insertProgress: 0,
     })
-    // Prime the schema with a transaction-backed insert.
-    await insertBatch('home_table', [generate.home_table()])
 
     try {
       clearCollections()
@@ -79,6 +78,14 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       await seedTestData()
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(2)} ms` })
+
+      const query = liveQuerySql(collections as never, props.query)
+      const liveCollection = createCollection(
+        liveQueryCollectionOptions({
+          query: query as never,
+          startSync: true,
+        }),
+      )
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
@@ -89,13 +96,6 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
           insertProgress: progress,
         })
       })
-      const query = liveQuerySql(collections as never, props.query)
-      const liveCollection = createCollection(
-        liveQueryCollectionOptions({
-          query: query as never,
-          startSync: true,
-        }),
-      )
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(2)} ms`,
