@@ -16,7 +16,7 @@
     "test:lint": "biome lint --write",
     "test:type": "tsgo",
     "test:unit": "vitest run --coverage --changed origin/main",
-    "build": "tsup ./src/index.ts --format cjs,esm --dts --clean && attw --profile node16 --pack ."
+    "build": "tsup ./src/index.ts --format cjs,esm --dts --clean --sourcemap && attw --profile node16 --pack ."
   },
   "peerDependencies": {
     "@tanstack/db": "^0.5.25"
