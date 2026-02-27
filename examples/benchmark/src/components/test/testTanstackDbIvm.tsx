@@ -23,22 +23,12 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     collections[tableName]!.insert(rows)
 
   const seedTestData = () => {
-    const batchSize = 1000
-    for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
-      const batch = seed.home_feature_table.slice(i, i + batchSize)
-      insertBatch('home_feature_table', batch)
-    }
-    for (let i = 0; i < seed.locality_table.length; i += batchSize) {
-      const batch = seed.locality_table.slice(i, i + batchSize)
-      insertBatch('locality_table', batch)
-    }
+    insertBatch('home_feature_table', seed.home_feature_table)
+    insertBatch('locality_table', seed.locality_table)
     insertBatch('home_table', [generate.home_table()])
   }
 
-  const insertTestDataNonBlocking = async (
-    count: number,
-    onProgress?: (current: number) => void,
-  ) => {
+  const insertTestDataNonBlocking = (count: number) => {
     const batchSize = 1000
     for (let i = 0; i < count; i += batchSize) {
       const batchCount = Math.min(batchSize, count - i)
@@ -46,7 +36,10 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
         generate.home_table(),
       )
       insertBatch('home_table', rows)
-      onProgress?.(i + batchCount)
+      const percentProgress = Math.round(
+        Math.min(100, ((i + batchCount) / count) * 100),
+      )
+      console.debug(`Tanstack IVM test progress: ${percentProgress}%`)
     }
   }
 
@@ -88,14 +81,12 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       )
 
       const insertStart = performance.now()
-      const homeRows = props.rowCount
-      await insertTestDataNonBlocking(homeRows, (current) => {
-        const progress = Math.min(100, (current / homeRows) * 100)
-        setState({
-          insertStatus: 'Inserting…',
-          insertProgress: progress,
-        })
+      setState({
+        insertStatus: 'Inserting…',
+        insertProgress: 0,
       })
+      const homeRows = props.rowCount
+      insertTestDataNonBlocking(homeRows)
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,
