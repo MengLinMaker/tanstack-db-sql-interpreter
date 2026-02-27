@@ -102,6 +102,12 @@ const insertTestDataNonBlocking = async (
   }
 }
 
+const clearTables = async (db: typeof PgliteDB.defaultValue) => {
+  await db.exec(
+    'TRUNCATE TABLE home_table, locality_table, home_feature_table RESTART IDENTITY CASCADE',
+  )
+}
+
 export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   const db = useContext(PgliteDB)
   const [state, setState] = createStore({
@@ -162,6 +168,8 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       await db.exec(sqlSchema)
       await db.exec('BEGIN')
       inTransaction = true
+
+      await clearTables(db)
 
       const seedStart = performance.now()
       await seedTestData(db)

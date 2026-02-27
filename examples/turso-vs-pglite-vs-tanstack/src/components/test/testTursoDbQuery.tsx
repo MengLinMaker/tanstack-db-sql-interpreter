@@ -102,6 +102,12 @@ const insertTestDataNonBlocking = async (
   }
 }
 
+const clearTables = async (db: typeof TursoDB.defaultValue) => {
+  await db.exec('DELETE FROM home_table')
+  await db.exec('DELETE FROM locality_table')
+  await db.exec('DELETE FROM home_feature_table')
+}
+
 export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
   const db = useContext(TursoDB)
   const [state, setState] = createStore({
@@ -140,6 +146,8 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
 
       await db.exec(sqlSchema)
       await db.exec('BEGIN')
+
+      await clearTables(db)
 
       const seedStart = performance.now()
       await seedTestData(db)
