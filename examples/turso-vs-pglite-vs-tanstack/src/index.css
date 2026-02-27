@@ -115,6 +115,43 @@ button {
   width: 6rem;
 }
 
+.test-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.result-dialog {
+  border: 1px solid var(--stroke);
+  padding: 1rem;
+  max-width: 44rem;
+  width: 90vw;
+}
+
+.result-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.dialog-header h3 {
+  margin: 0;
+}
+
+.dialog-body {
+  margin: 0;
+  max-height: 60vh;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--stroke);
+  padding: 0.8rem;
+}
+
 button:hover {
   border-color: var(--ink-muted);
 }

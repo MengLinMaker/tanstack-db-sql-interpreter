@@ -243,9 +243,14 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Pglite query"
+      subtitle="Single thread Postgres in WASM"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}
+      onShowResults={async () => {
+        const result = await db.query(props.query)
+        return JSON.stringify(result.rows, null, 2)
+      }}
       rows={tableRows()}
     />
   )

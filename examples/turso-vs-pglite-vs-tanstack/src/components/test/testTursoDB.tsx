@@ -229,9 +229,15 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Turso query"
+      subtitle="SQLite rust rewrite in WASM"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}
+      onShowResults={async () => {
+        const statement = db.prepare(props.query)
+        const results = await statement.all()
+        return JSON.stringify(results, null, 2)
+      }}
       rows={tableRows()}
     />
   )

@@ -158,9 +158,20 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Tanstack IVM"
+      subtitle="Live query SQL interpreter"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}
+      onShowResults={() => {
+        const query = liveQuerySql(collections as never, props.query)
+        const liveCollection = createCollection(
+          liveQueryCollectionOptions({
+            query: query as never,
+            startSync: true,
+          }),
+        )
+        return JSON.stringify(liveCollection.toArray, null, 2)
+      }}
       rows={tableRows()}
     />
   )
