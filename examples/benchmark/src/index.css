@@ -143,6 +143,12 @@ button {
   margin: 0;
 }
 
+.dialog-meta {
+  margin: 0 0 0.6rem;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+}
+
 .dialog-body {
   margin: 0;
   max-height: 60vh;

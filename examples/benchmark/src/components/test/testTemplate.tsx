@@ -17,7 +17,18 @@ export function TestTemplate(props: {
     const result = await props.onShowResults()
     if (!dialog) return
     const content = dialog.querySelector('pre')
+    const countLabel = dialog.querySelector('[data-row-count]')
     if (content) content.textContent = result
+    if (countLabel) {
+      let count = 0
+      try {
+        const parsed = JSON.parse(result)
+        count = Array.isArray(parsed) ? parsed.length : 0
+      } catch {
+        count = 0
+      }
+      countLabel.textContent = `Rows: ${count}`
+    }
     dialog.showModal()
   }
 
@@ -61,6 +72,9 @@ export function TestTemplate(props: {
             Close
           </button>
         </div>
+        <p class="dialog-meta" data-row-count>
+          Rows: 0
+        </p>
         <pre class="dialog-body"></pre>
       </dialog>
     </div>
