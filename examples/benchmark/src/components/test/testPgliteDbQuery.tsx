@@ -194,9 +194,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
         }
       }
       const message =
-        error instanceof Error
-          ? error.stack || error.message
-          : String(error)
+        error instanceof Error ? error.stack || error.message : String(error)
       setState({
         errorStatus: message,
         testStatus: 'Test failed',

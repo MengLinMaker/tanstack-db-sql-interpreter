@@ -177,9 +177,7 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
         // Ignore rollback failures.
       }
       const message =
-        error instanceof Error
-          ? error.stack || error.message
-          : String(error)
+        error instanceof Error ? error.stack || error.message : String(error)
       setState({
         errorStatus: message,
         testStatus: 'Test failed',
