@@ -1,6 +1,16 @@
 import { liveQuerySql } from '@menglinmaker/tanstack-db-sql-interpreter'
-import { createCollection, liveQueryCollectionOptions } from '@tanstack/db'
-import { createEffect, onCleanup, onMount, useContext } from 'solid-js'
+import {
+  type Collection,
+  createCollection,
+  liveQueryCollectionOptions,
+} from '@tanstack/db'
+import {
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+  useContext,
+} from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { TanstackDB } from '../database/tanstackDB.tsx'
@@ -17,6 +27,8 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     isFinished: false,
     queryStatus: '',
   })
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
+  const [liveCollection, setLiveCollection] = createSignal<Collection>()
 
   const insertBatch = (tableName: string, rows: any[]) =>
     collections[tableName]!.insert(rows)
@@ -88,18 +100,20 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       setState({ insertStatus: `${insertDuration.toFixed(2)} ms` })
 
       const query = liveQuerySql(collections as never, props.query)
-      const liveCollection = createCollection(
-        liveQueryCollectionOptions({
-          query: query as never,
-          startSync: true,
-        }),
+      setLiveCollection(
+        createCollection(
+          liveQueryCollectionOptions({
+            query: query as never,
+            startSync: true,
+          }),
+        ),
       )
+      setQueryResult(liveCollection()!.toArray)
 
       refreshTimer = window.setInterval(() => {
         const startedAt = performance.now()
         // Force evaluation of results to measure query time.
         void Promise.resolve().then(() => {
-          liveCollection.toArray
           const duration = performance.now() - startedAt
           setState({ queryStatus: `${duration.toFixed(2)} ms` })
           if (!hasMeasured) {
@@ -166,16 +180,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}
-      onShowResults={() => {
-        const query = liveQuerySql(collections as never, props.query)
-        const liveCollection = createCollection(
-          liveQueryCollectionOptions({
-            query: query as never,
-            startSync: true,
-          }),
-        )
-        return JSON.stringify(liveCollection.toArray, null, 2)
-      }}
+      onShowResults={() => JSON.stringify(queryResult(), null, 2)}
       rows={tableRows()}
     />
   )
