@@ -61,6 +61,15 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     }
   }
 
+  const clearCollections = async () => {
+    for (const collection of Object.values(collections)) {
+      const keys = Array.from(collection.state.keys())
+      if (keys.length > 0) {
+        collection.delete(keys)
+      }
+    }
+  }
+
   let refreshTimer: number | undefined
   let hasMeasured = false
 
@@ -87,6 +96,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
 
     try {
       clearRefresh()
+      clearCollections()
 
       const seedStart = performance.now()
       await seedTestData()
