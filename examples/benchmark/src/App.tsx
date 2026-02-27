@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js'
+import { createSignal, onMount } from 'solid-js'
 import { PgliteDB } from './components/database/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './components/database/pgliteSchemaMigrator.tsx'
 import { TanstackDB } from './components/database/tanstackDB.tsx'
@@ -48,8 +48,35 @@ ORDER BY homes DESC`,
 }
 
 export default function App() {
-  const [sql, setSql] = createSignal(Object.values(sqlExamples)[0]!)
-  const [rowCount, setRowCount] = createSignal(10000)
+  const defaultSql = Object.values(sqlExamples)[0]!
+  const defaultRowCount = 10000
+  const [sql, setSql] = createSignal(defaultSql)
+  const [rowCount, setRowCount] = createSignal(defaultRowCount)
+
+  const clearOpfs = async () => {
+    if (!('storage' in navigator) || !navigator.storage.getDirectory) {
+      return
+    }
+    const root = await navigator.storage.getDirectory()
+    for await (const entry of root.values()) {
+      console.warn(entry)
+      await root.removeEntry(entry.name, { recursive: true })
+    }
+  }
+
+  onMount(async () => {
+    await clearOpfs()
+  })
+
+  const resetTestConfig = async () => {
+    setSql(defaultSql)
+    setRowCount(defaultRowCount)
+    try {
+      await clearOpfs()
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   return (
     <div class="page">
@@ -86,6 +113,9 @@ export default function App() {
           ))}
         </div>
         <SqlTextInput value={sql()} onChange={setSql} />
+        <button class="ghost example-button" type="button" onClick={resetTestConfig}>
+          Reset config and clear OPFS
+        </button>
       </section>
 
       <section class="grid">
