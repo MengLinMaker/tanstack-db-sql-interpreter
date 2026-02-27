@@ -1,4 +1,6 @@
 import { createResource, createSignal } from 'solid-js'
+import { DuckdbDB, duckdbFactory } from './components/database/duckdbDB.tsx'
+import { DuckdbSchemaMigrator } from './components/database/duckdbSchemaMigrator.tsx'
 import { PgliteDB, pgliteFactory } from './components/database/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './components/database/pgliteSchemaMigrator.tsx'
 import { SqliteDB, sqliteFactory } from './components/database/sqliteDB.tsx'
@@ -10,6 +12,7 @@ import {
 import { TursoDB, tursoFactory } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
+import { TestDuckdbQuery } from './components/test/testDuckdbQuery.tsx'
 import { TestPgliteDbIvm } from './components/test/testPgliteDbIvm.tsx'
 import { TestPgliteDbQuery } from './components/test/testPgliteDbQuery.tsx'
 import { TestSqliteQuery } from './components/test/testSqliteQuery.tsx'
@@ -32,6 +35,7 @@ export default function App() {
   }
 
   const [tursoQueryDb] = createResource(tursoFactory)
+  const [duckdbQueryDb] = createResource(duckdbFactory)
 
   return (
     <div class="page">
@@ -118,6 +122,14 @@ export default function App() {
               <TestSqliteQuery query={sql()} rowCount={rowCount()} />
             </SqliteSchemaMigrator>
           </SqliteDB.Provider>
+        </article>
+
+        <article>
+          <DuckdbDB.Provider value={duckdbQueryDb.latest!}>
+            <DuckdbSchemaMigrator>
+              <TestDuckdbQuery query={sql()} rowCount={rowCount()} />
+            </DuckdbSchemaMigrator>
+          </DuckdbDB.Provider>
         </article>
       </section>
     </div>
