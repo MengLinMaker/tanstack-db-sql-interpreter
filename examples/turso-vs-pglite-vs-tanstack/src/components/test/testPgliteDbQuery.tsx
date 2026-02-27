@@ -2,7 +2,7 @@ import { createEffect, onCleanup, onMount, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
-import { TursoDB } from '../database/tursoDB.tsx'
+import { PgliteDB } from '../database/pgliteDB.tsx'
 import { TestTemplate } from './testTemplate.tsx'
 
 const yieldToUi = () =>
@@ -11,7 +11,7 @@ const yieldToUi = () =>
   })
 
 const insertBatch = async (
-  db: typeof TursoDB.defaultValue,
+  db: typeof PgliteDB.defaultValue,
   table: string,
   columns: string[],
   rows: Array<Array<unknown>>,
@@ -28,15 +28,15 @@ const insertBatch = async (
     placeholders.push(`(${rowPlaceholders})`)
     params.push(...row)
   })
-  const statement = db.prepare(
+  await db.query(
     `INSERT INTO ${table} (${columnList})
      VALUES ${placeholders.join(', ')}
      ON CONFLICT DO NOTHING`,
+    params,
   )
-  await statement.run(...params)
 }
 
-const seedTestData = async (db: typeof TursoDB.defaultValue) => {
+const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
@@ -71,7 +71,7 @@ const seedTestData = async (db: typeof TursoDB.defaultValue) => {
 }
 
 const insertTestDataNonBlocking = async (
-  db: typeof TursoDB.defaultValue,
+  db: typeof PgliteDB.defaultValue,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -102,8 +102,8 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-export function TestTursoDB(props: { query: string; rowCount: number }) {
-  const db = useContext(TursoDB)
+export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
+  const db = useContext(PgliteDB)
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -113,17 +113,34 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
     isFinished: false,
     queryStatus: '',
   })
+  const tableRows = () => [
+    {
+      label: 'Status',
+      value: state.errorStatus
+        ? `Test failed: ${state.errorStatus}`
+        : state.testStatus || 'Idle',
+    },
+    { label: 'Query time', value: state.queryStatus || '—' },
+    { label: 'Seed time', value: state.seedStatus || '—' },
+    { label: 'Insert time', value: state.insertStatus || '—' },
+  ]
 
   let refreshTimer: number | undefined
+  let unsubscribeLive: (() => Promise<void>) | undefined
 
-  const clearRefresh = () => {
+  const clearLive = async () => {
     if (refreshTimer !== undefined) {
       window.clearInterval(refreshTimer)
       refreshTimer = undefined
     }
+    if (unsubscribeLive) {
+      await unsubscribeLive()
+      unsubscribeLive = undefined
+    }
   }
 
   const runTest = async () => {
+    let inTransaction = false
     setState({
       isRunning: true,
       isFinished: false,
@@ -135,20 +152,25 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
     })
 
     try {
-      clearRefresh()
+      await clearLive()
 
       await db.exec(sqlSchema)
       await db.exec('BEGIN')
+      inTransaction = true
 
       const seedStart = performance.now()
       await seedTestData(db)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
-      const queryStatement = db.prepare(props.query)
+      const liveQuery = await db.live.query({
+        query: props.query,
+        callback: () => {}, // Results are intentionally not rendered to avoid UI blocking.
+      })
+
       refreshTimer = window.setInterval(() => {
         const startedAt = performance.now()
-        void queryStatement.all().then(() => {
+        void liveQuery.refresh().then(() => {
           const duration = performance.now() - startedAt
           setState({ queryStatus: `${duration.toFixed(1)} ms` })
         })
@@ -161,19 +183,23 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
       })
 
       await db.exec('COMMIT')
+      inTransaction = false
       const insertDuration = performance.now() - insertStart
       setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
 
-      clearRefresh()
+      unsubscribeLive = () => liveQuery.unsubscribe()
+      await clearLive()
       setState({
         testStatus: 'Test finished',
         isFinished: true,
       })
     } catch (error) {
-      try {
-        await db.exec('ROLLBACK')
-      } catch {
-        // Ignore rollback failures.
+      if (inTransaction) {
+        try {
+          await db.exec('ROLLBACK')
+        } catch {
+          // Ignore rollback failures to preserve the original error.
+        }
       }
       const message = error instanceof Error ? error.message : String(error)
       setState({
@@ -189,8 +215,8 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
 
   onMount(async () => {
     try {
-      onCleanup(() => {
-        clearRefresh()
+      onCleanup(async () => {
+        await clearLive()
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -203,7 +229,7 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
-    clearRefresh()
+    void clearLive()
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -215,29 +241,16 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
     })
   })
 
-  const tableRows = () => [
-    {
-      label: 'Status',
-      value: state.errorStatus
-        ? `Test failed: ${state.errorStatus}`
-        : state.testStatus || 'Idle',
-    },
-    { label: 'Query time', value: state.queryStatus || '—' },
-    { label: 'Seed time', value: state.seedStatus || '—' },
-    { label: 'Insert time', value: state.insertStatus || '—' },
-  ]
-
   return (
     <TestTemplate
-      title="Turso query"
-      subtitle="SQLite rust rewrite in WASM"
+      title="Pglite query"
+      subtitle="Single thread Postgres in WASM"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}
       onShowResults={async () => {
-        const statement = db.prepare(props.query)
-        const results = await statement.all()
-        return JSON.stringify(results, null, 2)
+        const result = await db.query(props.query)
+        return JSON.stringify(result.rows, null, 2)
       }}
       rows={tableRows()}
     />

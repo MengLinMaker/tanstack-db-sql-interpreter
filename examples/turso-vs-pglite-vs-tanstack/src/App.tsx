@@ -5,9 +5,9 @@ import { TanstackDB } from './components/database/tanstackDB.tsx'
 import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
-import { TestPgliteDB } from './components/test/TestPgliteDB.tsx'
+import { TestPgliteDbQuery } from './components/test/testPgliteDbQuery.tsx'
 import { TestTanstackDbIvm } from './components/test/testTanstackDbIvm.tsx'
-import { TestTursoDB } from './components/test/testTursoDB.tsx'
+import { TestTursoDbQuery } from './components/test/testTursoDbQuery.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
 const sqlExamples = {
@@ -100,7 +100,7 @@ export default function App() {
         <article>
           <PgliteDB.Provider value={PgliteDB.defaultValue}>
             <PgliteSchemaMigrator>
-              <TestPgliteDB query={sql()} rowCount={rowCount()} />
+              <TestPgliteDbQuery query={sql()} rowCount={rowCount()} />
             </PgliteSchemaMigrator>
           </PgliteDB.Provider>
         </article>
@@ -108,7 +108,7 @@ export default function App() {
         <article>
           <TursoDB.Provider value={TursoDB.defaultValue}>
             <TursoSchemaMigrator>
-              <TestTursoDB query={sql()} rowCount={rowCount()} />
+              <TestTursoDbQuery query={sql()} rowCount={rowCount()} />
             </TursoSchemaMigrator>
           </TursoDB.Provider>
         </article>
