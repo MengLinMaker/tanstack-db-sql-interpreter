@@ -57,11 +57,13 @@ export default function App() {
     if (!('storage' in navigator) || !navigator.storage.getDirectory) {
       return
     }
-    const root = await navigator.storage.getDirectory()
-    for await (const entry of root.values()) {
-      console.warn(entry)
-      await root.removeEntry(entry.name, { recursive: true })
+    try {
+      // @ts-expect-error <not defined>
+      await (await navigator.storage.getDirectory()).remove({ recursive: true });
+    } catch (e) {
+      console.error(e)
     }
+
   }
 
   onMount(async () => {
@@ -71,11 +73,7 @@ export default function App() {
   const resetTestConfig = async () => {
     setSql(defaultSql)
     setRowCount(defaultRowCount)
-    try {
-      await clearOpfs()
-    } catch (error) {
-      console.error(error)
-    }
+    await clearOpfs()
   }
 
   return (
