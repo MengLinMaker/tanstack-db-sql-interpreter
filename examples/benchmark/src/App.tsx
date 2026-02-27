@@ -5,6 +5,7 @@ import { TanstackDB } from './components/database/tanstackDB.tsx'
 import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
+import { TestPgliteDbIvm } from './components/test/testPgliteDbIvm.tsx'
 import { TestPgliteDbQuery } from './components/test/testPgliteDbQuery.tsx'
 import { TestTanstackDbIvm } from './components/test/testTanstackDbIvm.tsx'
 import { TestTursoDbQuery } from './components/test/testTursoDbQuery.tsx'
@@ -128,6 +129,14 @@ export default function App() {
           <TanstackDB.Provider value={TanstackDB.defaultValue}>
             <TestTanstackDbIvm query={sql()} rowCount={rowCount()} />
           </TanstackDB.Provider>
+        </article>
+
+        <article>
+          <PgliteDB.Provider value={PgliteDB.defaultValue}>
+            <PgliteSchemaMigrator>
+              <TestPgliteDbIvm query={sql()} rowCount={rowCount()} />
+            </PgliteSchemaMigrator>
+          </PgliteDB.Provider>
         </article>
 
         <article>
