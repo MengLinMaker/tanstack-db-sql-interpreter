@@ -123,9 +123,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   const tableRows = () => [
     {
       label: 'Status',
-      value: state.errorStatus
-        ? `Test failed: ${state.errorStatus}`
-        : state.testStatus || 'Idle',
+      value: state.errorStatus ? 'Error' : state.testStatus || 'Idle',
     },
     { label: 'Query time', value: state.queryStatus || '—' },
     { label: 'Seed time', value: state.seedStatus || '—' },
@@ -228,7 +226,9 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       subtitle="Single thread Postgres in WASM"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
+      hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
+      onShowError={() => state.errorStatus}
       onShowResults={async () => {
         const result = await db.query(props.query)
         return JSON.stringify(result.rows, null, 2)

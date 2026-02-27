@@ -206,9 +206,7 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
   const tableRows = () => [
     {
       label: 'Status',
-      value: state.errorStatus
-        ? `Test failed: ${state.errorStatus}`
-        : state.testStatus || 'Idle',
+      value: state.errorStatus ? 'Error' : state.testStatus || 'Idle',
     },
     { label: 'Query time', value: state.queryStatus || '—' },
     { label: 'Seed time', value: state.seedStatus || '—' },
@@ -225,7 +223,9 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
       subtitle="SQLite rust rewrite in WASM"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
+      hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
+      onShowError={() => state.errorStatus}
       onShowResults={async () => {
         const statement = db.prepare(props.query)
         const results = await statement.all()

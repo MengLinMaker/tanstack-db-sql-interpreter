@@ -158,6 +158,12 @@ button {
   padding: 0.8rem;
 }
 
+.button-error {
+  border-color: var(--error);
+  color: var(--error);
+  background: #f6d1ce;
+}
+
 button:hover {
   border-color: var(--ink-muted);
 }

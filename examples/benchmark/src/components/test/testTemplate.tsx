@@ -3,8 +3,10 @@ export function TestTemplate(props: {
   subtitle?: string
   isRunning: boolean
   isFinished: boolean
+  hasError: boolean
   onStart: () => void
   onShowResults: () => Promise<string> | string
+  onShowError: () => Promise<string> | string
   rows: {
     label: string
     value: string
@@ -12,6 +14,7 @@ export function TestTemplate(props: {
   }[]
 }) {
   let dialog: HTMLDialogElement | undefined
+  let errorDialog: HTMLDialogElement | undefined
 
   const openResults = async () => {
     const result = await props.onShowResults()
@@ -32,11 +35,27 @@ export function TestTemplate(props: {
     dialog.showModal()
   }
 
+  const openError = async () => {
+    const result = await props.onShowError()
+    if (!errorDialog) return
+    const content = errorDialog.querySelector('pre')
+    if (content) content.textContent = result
+    errorDialog.showModal()
+  }
+
   return (
     <div class="test">
       <h2>{props.title}</h2>
       <div class="test-actions">
-        {!props.isRunning && !props.isFinished ? (
+        {props.hasError ? (
+          <button
+            type="button"
+            class="button-error"
+            onClick={() => void openError()}
+          >
+            View error
+          </button>
+        ) : !props.isRunning && !props.isFinished ? (
           <button type="button" onClick={props.onStart}>
             Start test
           </button>
@@ -75,6 +94,15 @@ export function TestTemplate(props: {
         <p class="dialog-meta" data-row-count>
           Rows: 0
         </p>
+        <pre class="dialog-body"></pre>
+      </dialog>
+      <dialog ref={errorDialog} class="result-dialog">
+        <div class="dialog-header">
+          <h3>Error details</h3>
+          <button type="button" onClick={() => errorDialog?.close()}>
+            Close
+          </button>
+        </div>
         <pre class="dialog-body"></pre>
       </dialog>
     </div>
