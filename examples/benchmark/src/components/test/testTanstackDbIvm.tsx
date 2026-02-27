@@ -3,6 +3,7 @@ import { createCollection, liveQueryCollectionOptions } from '@tanstack/db'
 import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
+import { formatTestError } from '../../util/formatTestError.ts'
 import { TanstackDB } from '../database/tanstackDB.tsx'
 import { TestTemplate } from './testTemplate.tsx'
 
@@ -104,21 +105,11 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       setState({ queryStatus: `${duration.toFixed(1)} ms` })
     } catch (error) {
       console.error(error)
-      let message =
-        error instanceof Error ? error.stack || error.message : String(error)
-      if (
-        error instanceof Error &&
-        'cause' in error &&
-        error.cause instanceof Error
-      ) {
-        const cause = error.cause
-        message += `\n\nCaused by:\n${cause.stack || cause.message}`
-      }
       if (error instanceof Error) {
         console.error(error)
       }
       setState({
-        errorStatus: message,
+        errorStatus: formatTestError(error),
         testStatus: 'Test failed',
       })
     } finally {

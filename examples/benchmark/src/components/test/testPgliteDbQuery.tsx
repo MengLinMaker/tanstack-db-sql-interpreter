@@ -1,6 +1,7 @@
 import { createEffect, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
+import { formatTestError } from '../../util/formatTestError.ts'
 import { PgliteDB } from '../database/pgliteDB.tsx'
 import { TestTemplate } from './testTemplate.tsx'
 
@@ -175,21 +176,11 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
         isFinished: true,
       })
     } catch (error) {
-      let message =
-        error instanceof Error ? error.stack || error.message : String(error)
-      if (
-        error instanceof Error &&
-        'cause' in error &&
-        error.cause instanceof Error
-      ) {
-        const cause = error.cause
-        message += `\n\nCaused by:\n${cause.stack || cause.message}`
-      }
       if (error instanceof Error) {
         console.error(error)
       }
       setState({
-        errorStatus: message,
+        errorStatus: formatTestError(error),
         testStatus: 'Test failed',
       })
     } finally {
