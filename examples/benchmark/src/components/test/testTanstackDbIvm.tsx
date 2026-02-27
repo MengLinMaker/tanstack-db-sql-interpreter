@@ -113,7 +113,10 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       setState({ queryStatus: `${duration.toFixed(1)} ms` })
     } catch (error) {
       console.error(error)
-      const message = error instanceof Error ? error.message : String(error)
+      const message =
+        error instanceof Error
+          ? error.stack || error.message
+          : String(error)
       setState({
         errorStatus: message,
         testStatus: 'Test failed',

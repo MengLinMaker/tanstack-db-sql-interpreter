@@ -193,7 +193,10 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
           // Ignore rollback failures to preserve the original error.
         }
       }
-      const message = error instanceof Error ? error.message : String(error)
+      const message =
+        error instanceof Error
+          ? error.stack || error.message
+          : String(error)
       setState({
         errorStatus: message,
         testStatus: 'Test failed',
