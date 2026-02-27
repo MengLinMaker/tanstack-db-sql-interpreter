@@ -113,12 +113,12 @@ const joinExpressionNode = (
     FULL_JOIN: 'full',
   } as const
   const table = tableNode(n.children[1])
-  const method = joinMethodNode(
-    n.children[2],
-    collections,
-    newCollections,
-    table,
-  )
+  const allCollections = {
+    ...collections,
+    ...newCollections,
+    [table.alias]: collections[table.name]!,
+  }
+  const method = joinMethodNode(n.children[2], allCollections, table)
   return {
     type: joinTypeMap[joinTypeNode.children[0].name],
     table,
@@ -128,8 +128,7 @@ const joinExpressionNode = (
 
 const joinMethodNode = (
   node: Node.JOIN_METHOD,
-  collections: Collections,
-  newCollections: Collections,
+  allCollections: Collections,
   table: {
     name: string
     alias: string
@@ -138,14 +137,14 @@ const joinMethodNode = (
   const n = node.children[0]
   switch (n.name) {
     case 'ON': {
-      const joinColumn = columnNode(n.children[1], collections)
-      const otherColumn = columnNode(n.children[3], newCollections)
+      const joinColumn = columnNode(n.children[1], allCollections)
+      const otherColumn = columnNode(n.children[3], allCollections)
       return { joinColumn, otherColumn }
     }
     case 'USING': {
       const column = n.children[1].value
-      columnNotFoundCheck(collections, table, column)
-      const otherColumn = findColumnFromTables(newCollections, column)
+      columnNotFoundCheck(allCollections, table, column)
+      const otherColumn = findColumnFromTables(allCollections, column)
       return {
         joinColumn: { table: table.alias, column },
         otherColumn,
