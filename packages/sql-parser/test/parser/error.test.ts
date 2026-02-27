@@ -11,6 +11,6 @@ describe('Error node test', () => {
   it.sequential('Should fail invalid input on strict mode', () => {
     expect(() => {
       strictParseSql(`DROP INDEX my_idx;`)
-    }).throw('No parse at 0')
+    }).throw('SQL parse error at line 1, column 1')
   })
 })

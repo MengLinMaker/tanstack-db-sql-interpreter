@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { generateTypes } from './gen/generateTypes.ts'
 import { lezer } from '@lezer/generator/rollup'
 import { rollup } from 'rollup'
+import { generateTypes } from './gen/generateTypes.ts'
 
 const grammarFilePath = path.join(import.meta.dirname, './grammar/sql.grammar')
 
