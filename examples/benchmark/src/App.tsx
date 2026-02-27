@@ -1,12 +1,15 @@
 import { createSignal, onMount } from 'solid-js'
 import { PgliteDB } from './components/database/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './components/database/pgliteSchemaMigrator.tsx'
+import { SqlocalDB } from './components/database/sqlocalDB.tsx'
+import { SqlocalSchemaMigrator } from './components/database/sqlocalSchemaMigrator.tsx'
 import { TanstackDB } from './components/database/tanstackDB.tsx'
 import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
 import { TestPgliteDbIvm } from './components/test/testPgliteDbIvm.tsx'
 import { TestPgliteDbQuery } from './components/test/testPgliteDbQuery.tsx'
+import { TestSqliteQuery } from './components/test/testSqliteQuery.tsx'
 import { TestTanstackDbIvm } from './components/test/testTanstackDbIvm.tsx'
 import { TestTursoDbQuery } from './components/test/testTursoDbQuery.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
@@ -19,9 +22,9 @@ export default function App() {
   const [sql, setSql] = createSignal(defaultSql)
   const [rowCount, setRowCount] = createSignal(defaultRowCount)
 
-  onMount(async () => {
-    await clearOpfs()
-  })
+  // onMount(async () => {
+  //   await clearOpfs()
+  // })
 
   const resetTestConfig = async () => {
     setSql(defaultSql)
@@ -106,6 +109,14 @@ export default function App() {
               <TestTursoDbQuery query={sql()} rowCount={rowCount()} />
             </TursoSchemaMigrator>
           </TursoDB.Provider>
+        </article>
+
+        <article>
+          <SqlocalDB.Provider value={SqlocalDB.defaultValue}>
+            <SqlocalSchemaMigrator>
+              <TestSqliteQuery query={sql()} rowCount={rowCount()} />
+            </SqlocalSchemaMigrator>
+          </SqlocalDB.Provider>
         </article>
       </section>
     </div>

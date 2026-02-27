@@ -1,3 +1,4 @@
+import sqlocal from 'sqlocal/vite'
 import { defineConfig } from 'vite'
 import solid from 'vite-plugin-solid'
 
@@ -17,7 +18,7 @@ const crossOriginIsolation = () => ({
 })
 
 export default defineConfig({
-  plugins: [solid() as never, crossOriginIsolation()],
+  plugins: [solid() as never, crossOriginIsolation(), sqlocal()],
   optimizeDeps: {
     exclude: ['@electric-sql/pglite', '@electric-sql/pglite/worker'],
   },
