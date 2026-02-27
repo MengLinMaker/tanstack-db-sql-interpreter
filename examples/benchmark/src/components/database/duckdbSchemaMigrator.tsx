@@ -2,16 +2,7 @@ import { createSignal, type JSX, onMount, Show, useContext } from 'solid-js'
 import { sqlSchema } from '../../schema/schema.sql.ts'
 import { DuckdbDB } from './duckdbDB.tsx'
 
-type DuckdbSchemaMigratorProps = {
-  children: JSX.Element
-}
-
-const schemaStatements = sqlSchema
-  .split(';')
-  .map((statement) => statement.trim())
-  .filter(Boolean)
-
-export function DuckdbSchemaMigrator(props: DuckdbSchemaMigratorProps) {
+export function DuckdbSchemaMigrator(props: { children: JSX.Element }) {
   const db = useContext(DuckdbDB)
   const [ready, setReady] = createSignal(false)
   const [error, setError] = createSignal<Error | null>(null)
@@ -19,16 +10,13 @@ export function DuckdbSchemaMigrator(props: DuckdbSchemaMigratorProps) {
   onMount(async () => {
     try {
       const conn = await db.connect()
-      for (const statement of schemaStatements) {
-        await conn.query(statement)
-      }
+      await conn.query(sqlSchema)
       const tables = await conn.query(
         `SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'`,
       )
       await conn.close()
-      if (!tables || (tables as { length: number }).length === 0) {
+      if (!tables || tables.numRows === 0)
         throw Error(`DuckDB schema migration failed: no tables found`)
-      }
       setReady(true)
     } catch (caught) {
       setError(caught instanceof Error ? caught : new Error(String(caught)))
