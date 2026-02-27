@@ -30,8 +30,7 @@ const insertBatch = async (
   })
   await db.query(
     `INSERT INTO ${table} (${columnList})
-     VALUES ${placeholders.join(', ')}
-     ON CONFLICT DO NOTHING`,
+     VALUES ${placeholders.join(', ')}`,
     params,
   )
 }
