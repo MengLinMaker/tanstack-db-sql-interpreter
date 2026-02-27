@@ -28,11 +28,25 @@ export function UsageMonitor(props: { intervalMs?: number }) {
         <tbody>
           <tr>
             <td>Main CPU</td>
-            <td>{usage.cpuPercent()}%</td>
+            <td
+              class="usage-cell"
+              style={{
+                '--bar-width': `${usage.cpuPercent()}%`,
+              }}
+            >
+              {usage.cpuPercent()}%
+            </td>
           </tr>
           <tr>
             <td>Max CPU</td>
-            <td>{maxCpuPercent()}%</td>
+            <td
+              class="usage-cell"
+              style={{
+                '--bar-width': `${maxCpuPercent()}%`,
+              }}
+            >
+              {maxCpuPercent()}%
+            </td>
           </tr>
           <tr>
             <td>Heap memory</td>

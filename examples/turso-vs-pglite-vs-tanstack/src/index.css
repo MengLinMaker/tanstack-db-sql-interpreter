@@ -279,6 +279,25 @@ ul {
   font-weight: 600;
 }
 
+.usage-cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.usage-cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: var(--bar-width, 0%);
+  background: var(--accent-soft);
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.usage-cell {
+  z-index: 1;
+}
+
 .test {
   background: var(--card);
   border: 1px solid var(--stroke);
