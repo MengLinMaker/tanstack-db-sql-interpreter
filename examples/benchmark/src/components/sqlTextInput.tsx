@@ -5,7 +5,7 @@ import { basicSetup } from 'codemirror'
 import { createEffect, onCleanup, onMount } from 'solid-js'
 import { schema } from '../schema/collections'
 
-export function SqlTextInput(props: {
+export default function SqlTextInput(props: {
   value?: string
   onChange?: (value: string) => void
   class?: string
