@@ -89,6 +89,13 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
           insertProgress: progress,
         })
       })
+      const query = liveQuerySql(collections as never, props.query)
+      const liveCollection = createCollection(
+        liveQueryCollectionOptions({
+          query: query as never,
+          startSync: true,
+        }),
+      )
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(2)} ms`,
@@ -99,13 +106,6 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
         isFinished: true,
       })
 
-      const query = liveQuerySql(collections as never, props.query)
-      const liveCollection = createCollection(
-        liveQueryCollectionOptions({
-          query: query as never,
-          startSync: true,
-        }),
-      )
       const startedAt = performance.now()
       const results = liveCollection.toArray
       setQueryResult(results)
