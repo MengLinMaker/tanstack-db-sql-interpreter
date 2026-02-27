@@ -49,6 +49,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   }
 
   let refreshTimer: number | undefined
+  let hasMeasured = false
 
   const clearRefresh = () => {
     if (refreshTimer !== undefined) {
@@ -101,13 +102,16 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
           liveCollection.toArray
           const duration = performance.now() - startedAt
           setState({ queryStatus: `${duration.toFixed(2)} ms` })
+          if (!hasMeasured) {
+            hasMeasured = true
+            clearRefresh()
+            setState({
+              testStatus: 'Test finished',
+              isFinished: true,
+            })
+          }
         })
       }, 200)
-
-      setState({
-        testStatus: 'Test finished',
-        isFinished: true,
-      })
     } catch (error) {
       console.error(error)
       const message = error instanceof Error ? error.message : String(error)
