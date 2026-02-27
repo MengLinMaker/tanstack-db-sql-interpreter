@@ -24,6 +24,17 @@ export function UsageMonitor(props: { intervalMs?: number }) {
   return (
     <div class="usage-monitor">
       <h2 class="usage-monitor-title">Performance</h2>
+      <div class="usage-actions">
+        <button
+          type="button"
+          onClick={() => {
+            setMaxCpuPercent(0)
+            setMaxUsedMb(0)
+          }}
+        >
+          Reset max
+        </button>
+      </div>
       <table>
         <tbody>
           <tr>
