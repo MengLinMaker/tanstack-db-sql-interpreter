@@ -113,7 +113,11 @@ export default function App() {
           ))}
         </div>
         <SqlTextInput value={sql()} onChange={setSql} />
-        <button class="ghost example-button" type="button" onClick={resetTestConfig}>
+        <button
+          class="ghost example-button"
+          type="button"
+          onClick={resetTestConfig}
+        >
           Reset config and clear OPFS
         </button>
       </section>
