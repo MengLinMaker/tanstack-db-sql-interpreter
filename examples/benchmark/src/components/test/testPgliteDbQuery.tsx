@@ -1,6 +1,5 @@
 import { createEffect, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { PgliteDB } from '../database/pgliteDB.tsx'
 import { TestTemplate } from './testTemplate.tsx'
@@ -134,7 +133,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   ]
 
   const runTest = async () => {
-    let inTransaction = false
     setState({
       isRunning: true,
       isFinished: false,
@@ -146,10 +144,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
-      await db.exec(sqlSchema)
-      await db.exec('BEGIN')
-      inTransaction = true
-
       await clearTables(db)
 
       const seedStart = performance.now()
@@ -167,8 +161,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
         })
       })
 
-      await db.exec('COMMIT')
-      inTransaction = false
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,
@@ -185,13 +177,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
         isFinished: true,
       })
     } catch (error) {
-      if (inTransaction) {
-        try {
-          await db.exec('ROLLBACK')
-        } catch {
-          // Ignore rollback failures to preserve the original error.
-        }
-      }
       let message =
         error instanceof Error ? error.stack || error.message : String(error)
       if (
