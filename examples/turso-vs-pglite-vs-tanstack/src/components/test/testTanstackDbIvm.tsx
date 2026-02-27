@@ -2,55 +2,11 @@ import { liveQuerySql } from '@menglinmaker/tanstack-db-sql-interpreter'
 import { createCollection, liveQueryCollectionOptions } from '@tanstack/db'
 import { createEffect, onCleanup, onMount, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import type { collections as _collections } from '../../schema/collections.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { TanstackDB } from '../database/tanstackDB.tsx'
 import { TestTemplate } from './testTemplate.tsx'
 
-const yieldToUi = () =>
-  new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => resolve())
-  })
-
-const insertBatch = async (
-  collections: typeof _collections,
-  tableName: string,
-  rows: any[],
-) => {
-  for (const row of rows) collections[tableName]!.insert(row)
-}
-
-const seedTestData = async (collections: typeof TanstackDB.defaultValue) => {
-  const batchSize = 1000
-  for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
-    const batch = seed.home_feature_table.slice(i, i + batchSize)
-    await insertBatch(collections, 'home_feature_table', batch)
-    await yieldToUi()
-    console.log(collections['home_feature_table']!.toArray)
-  }
-  for (let i = 0; i < seed.locality_table.length; i += batchSize) {
-    const batch = seed.locality_table.slice(i, i + batchSize)
-    await insertBatch(collections, 'locality_table', batch)
-    await yieldToUi()
-  }
-}
-
-const insertTestDataNonBlocking = async (
-  collections: typeof TanstackDB.defaultValue,
-  count: number,
-  onProgress?: (current: number) => void,
-) => {
-  const batchSize = 1000
-  for (let i = 0; i < count; i += batchSize) {
-    const batchCount = Math.min(batchSize, count - i)
-    const rows = Array.from({ length: batchCount }, () => generate.home_table())
-    await insertBatch(collections, 'home_table', rows)
-    onProgress?.(i + batchCount)
-    await yieldToUi()
-  }
-}
-
-export function TestTanstackDB(props: { query: string; rowCount: number }) {
+export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   const collections = useContext(TanstackDB)
   const [state, setState] = createStore({
     insertStatus: '',
@@ -61,6 +17,36 @@ export function TestTanstackDB(props: { query: string; rowCount: number }) {
     isFinished: false,
     queryStatus: '',
   })
+
+  const insertBatch = (tableName: string, rows: any[]) =>
+    collections[tableName]!.insert(rows)
+
+  const seedTestData = () => {
+    const batchSize = 1000
+    for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
+      const batch = seed.home_feature_table.slice(i, i + batchSize)
+      insertBatch('home_feature_table', batch)
+    }
+    for (let i = 0; i < seed.locality_table.length; i += batchSize) {
+      const batch = seed.locality_table.slice(i, i + batchSize)
+      insertBatch('locality_table', batch)
+    }
+  }
+
+  const insertTestDataNonBlocking = async (
+    count: number,
+    onProgress?: (current: number) => void,
+  ) => {
+    const batchSize = 1000
+    for (let i = 0; i < count; i += batchSize) {
+      const batchCount = Math.min(batchSize, count - i)
+      const rows = Array.from({ length: batchCount }, () =>
+        generate.home_table(),
+      )
+      insertBatch('home_table', rows)
+      onProgress?.(i + batchCount)
+    }
+  }
 
   let refreshTimer: number | undefined
 
@@ -81,24 +67,24 @@ export function TestTanstackDB(props: { query: string; rowCount: number }) {
       insertStatus: '',
       queryStatus: '',
     })
-    // Need initial data to infer schema
-    collections['home_table']!.insert(generate.home_table())
+    // Prime the schema with a transaction-backed insert.
+    await insertBatch('home_table', [generate.home_table()])
 
     try {
       clearRefresh()
 
       const seedStart = performance.now()
-      await seedTestData(collections)
+      await seedTestData()
       const seedDuration = performance.now() - seedStart
-      setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
+      setState({ seedStatus: `${seedDuration.toFixed(2)} ms` })
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
-      await insertTestDataNonBlocking(collections, homeRows, (current) => {
+      await insertTestDataNonBlocking(homeRows, (current) => {
         setState({ insertStatus: `Inserting… ${current}/${homeRows}` })
       })
       const insertDuration = performance.now() - insertStart
-      setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
+      setState({ insertStatus: `${insertDuration.toFixed(2)} ms` })
 
       const query = liveQuerySql(collections as never, props.query)
       const liveCollection = createCollection(
@@ -114,7 +100,7 @@ export function TestTanstackDB(props: { query: string; rowCount: number }) {
         void Promise.resolve().then(() => {
           liveCollection.toArray
           const duration = performance.now() - startedAt
-          setState({ queryStatus: `${duration.toFixed(1)} ms` })
+          setState({ queryStatus: `${duration.toFixed(2)} ms` })
         })
       }, 200)
 
@@ -171,7 +157,7 @@ export function TestTanstackDB(props: { query: string; rowCount: number }) {
 
   return (
     <TestTemplate
-      title="Tanstack db query"
+      title="Tanstack IVM"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       onStart={() => void runTest()}
