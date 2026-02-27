@@ -11,14 +11,17 @@ import { TestTursoDbQuery } from './components/test/testTursoDbQuery.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
 const sqlExamples = {
-  'count all': `SELECT
+  'select home_table': `SELECT home_table.*
+FROM home_table`,
+
+  'aggregate home_table': `SELECT
   COUNT(*) AS count_home,
   MIN(h.higher_price_aud) AS min_price,
   AVG(h.higher_price_aud) AS avg_price,
   MAX(h.higher_price_aud) AS max_price
 FROM home_table h`,
 
-  'join overview': `SELECT
+  join: `SELECT
   h.id,
   h.street_address,
   lf.suburb_name,
@@ -29,8 +32,7 @@ FROM home_table h`,
 FROM home_table h
 JOIN locality_table lf ON lf.id = h.locality_table_id
 JOIN home_feature_table hf ON hf.id = h.home_feature_table_id
-ORDER BY h.higher_price_aud DESC
-LIMIT 20`,
+ORDER BY h.higher_price_aud DESC`,
 
   'price band': `SELECT
   CASE
