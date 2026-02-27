@@ -35,8 +35,7 @@ CREATE TABLE
         locality_table_id integer NOT NULL REFERENCES locality_table (id),
         home_feature_table_id integer NOT NULL REFERENCES home_feature_table (id),
         street_address text NOT NULL,
-        higher_price_aud integer NOT NULL,
-        CONSTRAINT home_table_locality_table_id_street_address_unique UNIQUE (locality_table_id, street_address)
+        higher_price_aud integer NOT NULL
     );
 
 CREATE INDEX IF NOT EXISTS home_table_home_feature_table_id_idx ON home_table (home_feature_table_id);
