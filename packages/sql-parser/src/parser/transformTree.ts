@@ -51,9 +51,33 @@ const transformTree = (tree: Tree, inputText: string) => {
 }
 
 export const strictParseSql = (sql: string) => {
-  const strictParser = parser.configure({ strict: true })
-  const tree = strictParser.parse(sql)
-
-  const ast = transformTree(tree, sql)
-  return ast
+  try {
+    const strictParser = parser.configure({ strict: true })
+    const tree = strictParser.parse(sql)
+    const ast = transformTree(tree, sql)
+    return ast
+  } catch (originalError) {
+    if (originalError instanceof SyntaxError) {
+      const match = originalError.message.match(/No parse at (\d+)/)
+      if (match) {
+        const position = Number.parseInt(match[1]!, 10)
+        let line = 1
+        let column = 1
+        for (let i = 0; i < Math.min(position, sql.length); i++) {
+          if (sql[i] === '\n') {
+            line += 1
+            column = 1
+          } else {
+            column += 1
+          }
+        }
+        const enhancedError = new SyntaxError(
+          `SQL parse error at line ${line}, column ${column}`,
+        )
+        ;(enhancedError as { cause?: unknown }).cause = originalError
+        throw enhancedError
+      }
+    }
+    throw originalError
+  }
 }
