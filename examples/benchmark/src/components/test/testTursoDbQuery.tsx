@@ -134,7 +134,6 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
 
     try {
       await db.exec(sqlSchema)
-      await db.exec('BEGIN')
 
       await clearTables(db)
 
@@ -153,7 +152,6 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
         })
       })
 
-      await db.exec('COMMIT')
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,
