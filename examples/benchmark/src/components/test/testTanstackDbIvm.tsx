@@ -160,7 +160,6 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Tanstack IVM"
-      subtitle="Live query SQL interpreter"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

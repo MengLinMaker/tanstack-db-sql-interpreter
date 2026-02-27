@@ -219,7 +219,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Pglite query"
-      subtitle="Single thread Postgres in WASM"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}
