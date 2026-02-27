@@ -23,7 +23,6 @@ export function TestTemplate(props: {
   return (
     <div class="test">
       <h2>{props.title}</h2>
-      {props.subtitle ? <p class="subtitle">{props.subtitle}</p> : null}
       <div class="test-actions">
         {!props.isRunning && !props.isFinished ? (
           <button type="button" onClick={props.onStart}>
