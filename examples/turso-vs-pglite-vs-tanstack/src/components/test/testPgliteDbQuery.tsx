@@ -150,7 +150,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       isRunning: true,
       isFinished: false,
       errorStatus: '',
-      testStatus: 'Test running…',
+      testStatus: 'Running…',
       seedStatus: '',
       insertStatus: '',
       queryStatus: '',
