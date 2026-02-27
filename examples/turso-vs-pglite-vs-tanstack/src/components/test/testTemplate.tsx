@@ -29,10 +29,11 @@ export function TestTemplate(props: {
           <button type="button" onClick={props.onStart}>
             Start test
           </button>
-        ) : null}
-        <button type="button" onClick={() => void openResults()}>
-          View query results
-        </button>
+        ) : (
+          <button type="button" onClick={() => void openResults()}>
+            View query results
+          </button>
+        )}
       </div>
       <table>
         <tbody>
