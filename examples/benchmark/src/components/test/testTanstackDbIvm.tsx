@@ -77,7 +77,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       const seedStart = performance.now()
       await seedTestData()
       const seedDuration = performance.now() - seedStart
-      setState({ seedStatus: `${seedDuration.toFixed(2)} ms` })
+      setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const query = liveQuerySql(collections as never, props.query)
       const liveCollection = createCollection(
@@ -98,7 +98,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       })
       const insertDuration = performance.now() - insertStart
       setState({
-        insertStatus: `${insertDuration.toFixed(2)} ms`,
+        insertStatus: `${insertDuration.toFixed(1)} ms`,
         insertProgress: 100,
       })
       setState({
@@ -110,7 +110,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       const results = liveCollection.toArray
       setQueryResult(results)
       const duration = performance.now() - startedAt
-      setState({ queryStatus: `${duration.toFixed(2)} ms` })
+      setState({ queryStatus: `${duration.toFixed(1)} ms` })
     } catch (error) {
       console.error(error)
       const message = error instanceof Error ? error.message : String(error)
