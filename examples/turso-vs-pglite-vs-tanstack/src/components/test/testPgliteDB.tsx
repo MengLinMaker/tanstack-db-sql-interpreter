@@ -188,6 +188,7 @@ export function TestPgliteDB(props: { query: string; rowCount: number }) {
       setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
 
       unsubscribeLive = () => liveQuery.unsubscribe()
+      await clearLive()
       setState({
         testStatus: 'Test finished',
         isFinished: true,

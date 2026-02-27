@@ -164,6 +164,7 @@ export function TestTursoDB(props: { query: string; rowCount: number }) {
       const insertDuration = performance.now() - insertStart
       setState({ insertStatus: `${insertDuration.toFixed(1)} ms` })
 
+      clearRefresh()
       setState({
         testStatus: 'Test finished',
         isFinished: true,
