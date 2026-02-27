@@ -134,6 +134,15 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+  align-items: stretch;
+}
+
+.grid article {
+  display: flex;
+}
+
+.grid article > * {
+  flex: 1;
 }
 
 .card {

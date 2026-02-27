@@ -27,7 +27,7 @@ export function UsageMonitor(props: { intervalMs?: number }) {
       <table>
         <tbody>
           <tr>
-            <td>CPU (main thread)</td>
+            <td>Main CPU</td>
             <td>{usage.cpuPercent()}%</td>
           </tr>
           <tr>
@@ -35,7 +35,7 @@ export function UsageMonitor(props: { intervalMs?: number }) {
             <td>{maxCpuPercent()}%</td>
           </tr>
           <tr>
-            <td>Memory (JS heap)</td>
+            <td>Heap memory</td>
             <td>
               <Show
                 when={usage.memorySupported()}
@@ -46,7 +46,7 @@ export function UsageMonitor(props: { intervalMs?: number }) {
             </td>
           </tr>
           <tr>
-            <td>Max memory (JS heap)</td>
+            <td>Max memory</td>
             <td>
               <Show
                 when={usage.memorySupported()}

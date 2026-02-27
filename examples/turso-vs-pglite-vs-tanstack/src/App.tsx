@@ -6,7 +6,7 @@ import { TursoDB } from './components/database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './components/database/tursoSchemaMigrator.tsx'
 import { SqlTextInput } from './components/sqlTextInput.tsx'
 import { TestPgliteDB } from './components/test/TestPgliteDB.tsx'
-import { TestTanstackDB } from './components/test/testTanstackDB.tsx'
+import { TestTanstackDbIvm } from './components/test/testTanstackDbIvm.tsx'
 import { TestTursoDB } from './components/test/testTursoDB.tsx'
 import { UsageMonitor } from './components/usageMonitor.tsx'
 
@@ -47,16 +47,12 @@ ORDER BY homes DESC`,
 
 export default function App() {
   const [sql, setSql] = createSignal(Object.values(sqlExamples)[0]!)
-  const [rowCount, setRowCount] = createSignal(1000)
+  const [rowCount, setRowCount] = createSignal(10000)
 
   return (
     <div class="page">
       <section>
         <h1>Browser IVM benchmark</h1>
-      </section>
-
-      <section>
-        <UsageMonitor intervalMs={100}></UsageMonitor>
       </section>
 
       <section class="card">
@@ -92,6 +88,16 @@ export default function App() {
 
       <section class="grid">
         <article>
+          <UsageMonitor intervalMs={100}></UsageMonitor>
+        </article>
+
+        <article>
+          <TanstackDB.Provider value={TanstackDB.defaultValue}>
+            <TestTanstackDbIvm query={sql()} rowCount={rowCount()} />
+          </TanstackDB.Provider>
+        </article>
+
+        <article>
           <PgliteDB.Provider value={PgliteDB.defaultValue}>
             <PgliteSchemaMigrator>
               <TestPgliteDB query={sql()} rowCount={rowCount()} />
@@ -105,12 +111,6 @@ export default function App() {
               <TestTursoDB query={sql()} rowCount={rowCount()} />
             </TursoSchemaMigrator>
           </TursoDB.Provider>
-        </article>
-
-        <article>
-          <TanstackDB.Provider value={TanstackDB.defaultValue}>
-            <TestTanstackDB query={sql()} rowCount={rowCount()} />
-          </TanstackDB.Provider>
         </article>
       </section>
     </div>
