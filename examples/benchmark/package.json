@@ -1,5 +1,5 @@
 {
-  "name": "turso-vs-pglite-vs-tanstack",
+  "name": "@menglinmaker/benchmark",
   "private": true,
   "type": "module",
   "version": "0.0.0",
