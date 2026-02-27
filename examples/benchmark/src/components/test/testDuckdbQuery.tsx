@@ -10,6 +10,41 @@ const yieldToUi = () =>
     window.requestAnimationFrame(() => resolve())
   })
 
+type DuckdbResult = {
+  toArray?: () => unknown[]
+}
+
+const normalizeRows = (result: unknown) => {
+  const rows = (result as DuckdbResult | null)?.toArray?.()
+  return rows ?? (result as unknown[])
+}
+
+const queryDuckdbRows = async (
+  conn: { query: (sql: string) => Promise<unknown> },
+  sql: string,
+) => {
+  const startedAt = performance.now()
+  const result = await conn.query(sql)
+  const rows = normalizeRows(result)
+  const durationMs = performance.now() - startedAt
+  return { rows, durationMs }
+}
+
+const getDuckdbRows = async (
+  conn: { query: (sql: string) => Promise<unknown> },
+  sql: string,
+) => {
+  const result = await conn.query(sql)
+  return normalizeRows(result)
+}
+
+const stringifyRows = (rows: unknown) =>
+  JSON.stringify(
+    rows,
+    (_key, value) => (typeof value === 'bigint' ? Number(value) : value),
+    2,
+  )
+
 const insertBatch = async (
   conn: {
     query: (sql: string) => Promise<unknown>
@@ -178,10 +213,8 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
         insertProgress: 100,
       })
 
-      const queryStart = performance.now()
-      await conn.query(props.query)
-      const queryDuration = performance.now() - queryStart
-      setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
+      const { durationMs } = await queryDuckdbRows(conn, props.query)
+      setState({ queryStatus: `${durationMs.toFixed(1)} ms` })
 
       setState({
         testStatus: 'Finished',
@@ -245,20 +278,9 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
       onShowError={() => state.errorStatus}
       onShowResults={async () => {
         const conn = await db.connect()
-        const results = await conn.query(props.query)
+        const rows = await getDuckdbRows(conn, props.query)
         await conn.close()
-        if (
-          results &&
-          typeof (results as { toArray?: () => unknown[] }).toArray ===
-            'function'
-        ) {
-          return JSON.stringify(
-            (results as { toArray: () => unknown[] }).toArray(),
-            null,
-            2,
-          )
-        }
-        return JSON.stringify(results, null, 2)
+        return stringifyRows(rows)
       }}
       rows={tableRows()}
     />
