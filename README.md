@@ -46,6 +46,9 @@ _It may be easier to generate own parser from custom grammar._
 2. Create eslint plugin for linting.
 
 ## Development
+### Vibe coding
+Although some parts of the code are vibe coded. New packages should ideally be written by hand first to ensure proper architecture is layed out for LLMs to use as an example.
+
 ### Structure
 Library code is placed in `./packages`:
 - `./packages/sql-parser` - produces typesafe SQL AST.
