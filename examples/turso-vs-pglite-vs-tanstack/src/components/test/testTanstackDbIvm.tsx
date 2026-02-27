@@ -71,6 +71,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   }
 
   const runTest = async () => {
+    let finished = false
     setState({
       isRunning: true,
       isFinished: false,
@@ -98,6 +99,11 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       })
       const insertDuration = performance.now() - insertStart
       setState({ insertStatus: `${insertDuration.toFixed(2)} ms` })
+      finished = true
+      setState({
+        testStatus: 'Test finished',
+        isFinished: true,
+      })
 
       const query = liveQuerySql(collections as never, props.query)
       setLiveCollection(
@@ -108,7 +114,10 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
           }),
         ),
       )
+      const startedAt = performance.now()
       setQueryResult(liveCollection()!.toArray)
+      const duration = performance.now() - startedAt
+      setState({ queryStatus: `${duration.toFixed(2)} ms` })
 
       refreshTimer = window.setInterval(() => {
         const startedAt = performance.now()
@@ -116,7 +125,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
         void Promise.resolve().then(() => {
           const duration = performance.now() - startedAt
           setState({ queryStatus: `${duration.toFixed(2)} ms` })
-          if (!hasMeasured) {
+          if (!hasMeasured && !finished) {
             hasMeasured = true
             clearRefresh()
             setState({
@@ -137,6 +146,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       setState({
         isRunning: false,
       })
+      clearRefresh()
     }
   }
 
