@@ -113,8 +113,16 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       setState({ queryStatus: `${duration.toFixed(1)} ms` })
     } catch (error) {
       console.error(error)
-      const message =
+      let message =
         error instanceof Error ? error.stack || error.message : String(error)
+      if (
+        error instanceof Error &&
+        'cause' in error &&
+        error.cause instanceof Error
+      ) {
+        const cause = error.cause
+        message += `\n\nCaused by:\n${cause.stack || cause.message}`
+      }
       if (error instanceof Error) {
         console.error(error)
       }

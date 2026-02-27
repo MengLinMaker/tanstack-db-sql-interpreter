@@ -176,8 +176,16 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
       } catch {
         // Ignore rollback failures.
       }
-      const message =
+      let message =
         error instanceof Error ? error.stack || error.message : String(error)
+      if (
+        error instanceof Error &&
+        'cause' in error &&
+        error.cause instanceof Error
+      ) {
+        const cause = error.cause
+        message += `\n\nCaused by:\n${cause.stack || cause.message}`
+      }
       if (error instanceof Error) {
         console.error(error)
       }
