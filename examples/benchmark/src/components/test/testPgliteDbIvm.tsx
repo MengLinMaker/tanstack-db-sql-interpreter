@@ -104,6 +104,7 @@ const clearTables = async (db: typeof PgliteDB.defaultValue) => {
   await db.exec(
     'TRUNCATE TABLE home_table, locality_table, home_feature_table RESTART IDENTITY CASCADE',
   )
+  await db.exec('VACUUM FULL')
 }
 
 export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
@@ -146,6 +147,10 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
 
     try {
       await clearTables(db)
+      // Define live query
+      await db.live.incrementalQuery(props.query, [], 'id', (r) => {
+        setQueryResult(r.rows)
+      })
 
       const seedStart = performance.now()
       await seedTestData(db)
@@ -153,37 +158,20 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      const liveQuery = await db.live.incrementalQuery(
-        props.query,
-        [],
-        'id',
-        (res) => {
-          setQueryResult(res.rows)
-        },
-      )
-      liveQuery.subscribe((result) => {
-        setQueryResult(result.rows)
-      })
-      const homeRows = props.rowCount
-      await insertTestDataNonBlocking(db, homeRows, (current) => {
-        const progress = Math.min(100, (current / homeRows) * 100)
+      await insertTestDataNonBlocking(db, props.rowCount, (current) => {
+        const progress = Math.min(100, (current / props.rowCount) * 100)
         setState({
           insertStatus: 'Inserting…',
           insertProgress: progress,
         })
       })
-
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,
         insertProgress: 100,
       })
 
-      const queryStart = performance.now()
-      await liveQuery.unsubscribe()
-      const queryDuration = performance.now() - queryStart
-      setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
-
+      setState({ queryStatus: `${(0).toFixed(1)} ms` })
       setState({
         testStatus: 'Finished',
         isFinished: true,

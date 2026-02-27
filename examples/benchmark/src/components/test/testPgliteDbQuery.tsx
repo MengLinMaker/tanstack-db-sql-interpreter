@@ -104,6 +104,7 @@ const clearTables = async (db: typeof PgliteDB.defaultValue) => {
   await db.exec(
     'TRUNCATE TABLE home_table, locality_table, home_feature_table RESTART IDENTITY CASCADE',
   )
+  await db.exec('VACUUM FULL')
 }
 
 export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
@@ -152,15 +153,13 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      const homeRows = props.rowCount
-      await insertTestDataNonBlocking(db, homeRows, (current) => {
-        const progress = Math.min(100, (current / homeRows) * 100)
+      await insertTestDataNonBlocking(db, props.rowCount, (current) => {
+        const progress = Math.min(100, (current / props.rowCount) * 100)
         setState({
           insertStatus: 'Inserting…',
           insertProgress: progress,
         })
       })
-
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,
@@ -171,7 +170,6 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       await db.query(props.query)
       const queryDuration = performance.now() - queryStart
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
-
       setState({
         testStatus: 'Finished',
         isFinished: true,

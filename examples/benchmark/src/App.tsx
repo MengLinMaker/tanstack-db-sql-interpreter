@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js'
-import { PgliteDB } from './components/database/pgliteDB.tsx'
+import { PgliteDB, pgliteFactory } from './components/database/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './components/database/pgliteSchemaMigrator.tsx'
 import { SqliteDB } from './components/database/sqliteDB.tsx'
 import { SqliteSchemaMigrator } from './components/database/sqliteSchemaMigrator.tsx'
@@ -84,7 +84,7 @@ export default function App() {
         </article>
 
         <article>
-          <PgliteDB.Provider value={PgliteDB.defaultValue}>
+          <PgliteDB.Provider value={pgliteFactory()}>
             <PgliteSchemaMigrator>
               <TestPgliteDbIvm query={sql()} rowCount={rowCount()} />
             </PgliteSchemaMigrator>
@@ -92,7 +92,7 @@ export default function App() {
         </article>
 
         <article>
-          <PgliteDB.Provider value={PgliteDB.defaultValue}>
+          <PgliteDB.Provider value={pgliteFactory()}>
             <PgliteSchemaMigrator>
               <TestPgliteDbQuery query={sql()} rowCount={rowCount()} />
             </PgliteSchemaMigrator>
