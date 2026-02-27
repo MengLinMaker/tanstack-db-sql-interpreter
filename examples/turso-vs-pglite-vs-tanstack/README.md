@@ -1,12 +1,12 @@
-# Turso vs PGlite vs TanStack (Solid.js)
+# Compare Tanstack db to alternatives
+Test SQL queries against different localfirst databases.
 
-Solid.js boilerplate for comparing local-first data stacks.
+You may find that Tanstack db greatly improves read speeds and without the WASM and worker communication overhead. However, the data is sensitive to async functions.
 
-## Scripts
+## Why?
+This benchmarks provides a way to manually measure performance and compatibility across SQL queries and browsers.
 
-- `pnpm install`
+## Development
+### Local
+- `pnpm i`
 - `pnpm dev`
-- `pnpm build`
-- `pnpm preview`
-
-If you want workspace linking, add `examples/**` to `pnpm-workspace.yaml`.

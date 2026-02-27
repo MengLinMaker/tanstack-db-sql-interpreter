@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite serve",
     "test:lint": "biome lint --write",
     "test:type": "tsgo --noEmit"
   },
