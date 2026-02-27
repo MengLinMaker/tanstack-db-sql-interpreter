@@ -60,7 +60,7 @@ export function UsageMonitor(props: { intervalMs?: number }) {
             </td>
           </tr>
           <tr>
-            <td>Heap memory</td>
+            <td>Heap mem</td>
             <td>
               <Show
                 when={usage.memorySupported()}
@@ -71,7 +71,7 @@ export function UsageMonitor(props: { intervalMs?: number }) {
             </td>
           </tr>
           <tr>
-            <td>Max memory</td>
+            <td>Max mem</td>
             <td>
               <Show
                 when={usage.memorySupported()}
