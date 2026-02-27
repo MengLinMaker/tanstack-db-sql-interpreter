@@ -59,11 +59,10 @@ export default function App() {
     }
     try {
       // @ts-expect-error <not defined>
-      await (await navigator.storage.getDirectory()).remove({ recursive: true });
+      await (await navigator.storage.getDirectory()).remove({ recursive: true })
     } catch (e) {
       console.error(e)
     }
-
   }
 
   onMount(async () => {
