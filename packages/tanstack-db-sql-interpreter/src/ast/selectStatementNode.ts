@@ -8,8 +8,8 @@ import { groupNode } from './groupClause.ts'
 import { limitNode } from './limitClause.ts'
 import { orderNode } from './orderClause.ts'
 import { selectNode } from './selectClause.ts'
-import { expressionNode } from './shared/expression/expression.ts'
 import { applyExpression } from './shared/expression/apply.ts'
+import { expressionNode } from './shared/expression/expression.ts'
 import { stringifyExpression } from './shared/expression/stringify.ts'
 
 export const selectStatementNode = (
