@@ -41,12 +41,12 @@ const insertHomeFeatureBatchSql = (
     car_quantity: number
   }>,
 ) =>
-  rows
+  `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity) VALUES ${rows
     .map(
       (row) =>
-        `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity) VALUES (${row.id}, ${row.bed_quantity}, ${row.bath_quantity}, ${row.car_quantity});`,
+        `(${row.id}, ${row.bed_quantity}, ${row.bath_quantity}, ${row.car_quantity})`,
     )
-    .join('\n')
+    .join(', ')};`
 
 const insertLocalityBatchSql = (
   rows: Array<{
@@ -56,12 +56,12 @@ const insertLocalityBatchSql = (
     state_abbreviation: string
   }>,
 ) =>
-  rows
+  `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation) VALUES ${rows
     .map(
       (row) =>
-        `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation) VALUES (${row.id}, ${sqlValue(row.suburb_name)}, ${sqlValue(row.postcode)}, ${sqlValue(row.state_abbreviation)});`,
+        `(${row.id}, ${sqlValue(row.suburb_name)}, ${sqlValue(row.postcode)}, ${sqlValue(row.state_abbreviation)})`,
     )
-    .join('\n')
+    .join(', ')};`
 
 const insertHomeBatchSql = (
   rows: Array<{
@@ -72,15 +72,15 @@ const insertHomeBatchSql = (
     higher_price_aud: number
   }>,
 ) =>
-  rows
+  `INSERT INTO home_table (id, locality_table_id, home_feature_table_id, street_address, higher_price_aud) VALUES ${rows
     .map(
       (row) =>
-        `INSERT INTO home_table (id, locality_table_id, home_feature_table_id, street_address, higher_price_aud) VALUES (${row.id}, ${row.locality_table_id}, ${row.home_feature_table_id}, ${sqlValue(row.street_address)}, ${row.higher_price_aud});`,
+        `(${row.id}, ${row.locality_table_id}, ${row.home_feature_table_id}, ${sqlValue(row.street_address)}, ${row.higher_price_aud})`,
     )
-    .join('\n')
+    .join(', ')};`
 
 const seedTestData = async (db: StoolapDatabase) => {
-  const batchSize = 1000
+  const batchSize = 2000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     executeStoolapBatch(
       db,
@@ -88,14 +88,15 @@ const seedTestData = async (db: StoolapDatabase) => {
         seed.home_feature_table.slice(i, i + batchSize),
       ),
     )
-    await yieldToUi()
   }
   for (let i = 0; i < seed.locality_table.length; i += batchSize) {
     executeStoolapBatch(
       db,
       insertLocalityBatchSql(seed.locality_table.slice(i, i + batchSize)),
     )
-    await yieldToUi()
+    if (((i / batchSize) & 1) === 1) {
+      await yieldToUi()
+    }
   }
 }
 
@@ -104,13 +105,15 @@ const insertTestDataNonBlocking = async (
   count: number,
   onProgress?: (current: number) => void,
 ) => {
-  const batchSize = 1000
+  const batchSize = 2000
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
     const rows = Array.from({ length: batchCount }, () => generate.home_table())
     executeStoolapBatch(db, insertHomeBatchSql(rows))
     onProgress?.(i + batchCount)
-    await yieldToUi()
+    if (((i / batchSize) & 1) === 1) {
+      await yieldToUi()
+    }
   }
 }
 
