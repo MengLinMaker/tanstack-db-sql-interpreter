@@ -1,4 +1,4 @@
-import { createEffect, useContext } from 'solid-js'
+import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
@@ -116,6 +116,7 @@ const clearTables = async (db: typeof SqliteDB.defaultValue) => {
 
 export function TestSqliteQuery(props: { query: string; rowCount: number }) {
   const db = useContext(SqliteDB)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -162,8 +163,11 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
       })
 
       const queryStart = performance.now()
-      await db.sql([props.query] as unknown as TemplateStringsArray)
+      const result = await db.sql([
+        props.query,
+      ] as unknown as TemplateStringsArray)
       const queryDuration = performance.now() - queryStart
+      setQueryResult(Array.isArray(result) ? result : [])
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
 
       setState({
@@ -188,6 +192,7 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -222,14 +227,11 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={async () => {
-        const result = await db.sql([
-          props.query,
-        ] as unknown as TemplateStringsArray)
-        return {
-          rows: Array.isArray(result) ? result : [],
-        } satisfies QueryResultPayload
-      }}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )

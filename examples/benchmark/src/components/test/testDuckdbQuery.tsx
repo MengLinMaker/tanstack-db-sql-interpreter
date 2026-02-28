@@ -1,5 +1,5 @@
 import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm'
-import { createEffect, useContext } from 'solid-js'
+import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
@@ -130,6 +130,7 @@ const clearTables = async (conn: AsyncDuckDBConnection) => {
 
 export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
   const db = useContext(DuckdbDB)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -177,7 +178,8 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
         insertProgress: 100,
       })
 
-      const { durationMs } = await queryDuckdbRows(conn, props.query)
+      const { rows, durationMs } = await queryDuckdbRows(conn, props.query)
+      setQueryResult(Array.isArray(rows) ? rows : [rows])
       setState({ queryStatus: `${durationMs.toFixed(1)} ms` })
 
       setState({
@@ -203,6 +205,7 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -238,17 +241,11 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={async () => {
-        const conn = await db.connect()
-        try {
-          const rows = await getDuckdbRows(conn, props.query)
-          return {
-            rows: Array.isArray(rows) ? rows : [rows],
-          } satisfies QueryResultPayload
-        } finally {
-          await conn.close()
-        }
-      }}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )

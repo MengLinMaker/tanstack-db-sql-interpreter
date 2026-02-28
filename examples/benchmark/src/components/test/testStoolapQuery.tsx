@@ -1,4 +1,4 @@
-import { createEffect, useContext } from 'solid-js'
+import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
@@ -130,6 +130,8 @@ const clearTables = (db: StoolapDatabase) => {
 
 export function TestStoolapQuery(props: { query: string; rowCount: number }) {
   const db = useContext(StoolapDB)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
+  const [queryColumns, setQueryColumns] = createSignal<string[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -176,8 +178,15 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
       })
 
       const queryStart = performance.now()
-      executeStoolap(db, props.query)
+      const result = executeStoolap(db, props.query)
       const queryDuration = performance.now() - queryStart
+      if (result.type === 'rows') {
+        setQueryResult(toRowObjects(result))
+        setQueryColumns(result.columns)
+      } else {
+        setQueryResult([])
+        setQueryColumns([])
+      }
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
 
       setState({
@@ -202,6 +211,8 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
+    setQueryColumns([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -236,17 +247,12 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={() => {
-        if (!db) throw new Error('Stoolap database is not ready')
-        const result = executeStoolap(db, props.query)
-        if (result.type !== 'rows') {
-          return JSON.stringify(result, null, 2)
-        }
-        return {
-          rows: toRowObjects(result),
-          columns: result.columns,
-        } satisfies QueryResultPayload
-      }}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+          columns: queryColumns(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )

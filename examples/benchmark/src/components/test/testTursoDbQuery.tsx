@@ -1,4 +1,4 @@
-import { createEffect, useContext } from 'solid-js'
+import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
@@ -110,6 +110,7 @@ const clearTables = async (db: typeof TursoDB.defaultValue) => {
 
 export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
   const db = useContext(TursoDB)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -160,8 +161,9 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
 
       const queryStatement = db.prepare(props.query)
       const queryStart = performance.now()
-      await queryStatement.all()
+      const results = await queryStatement.all()
       const queryDuration = performance.now() - queryStart
+      setQueryResult(Array.isArray(results) ? results : [])
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
 
       setState({
@@ -191,6 +193,7 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -225,13 +228,11 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={async () => {
-        const statement = db.prepare(props.query)
-        const results = await statement.all()
-        return {
-          rows: Array.isArray(results) ? results : [],
-        } satisfies QueryResultPayload
-      }}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )
