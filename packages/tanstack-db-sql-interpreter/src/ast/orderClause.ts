@@ -33,17 +33,17 @@ const orderExpressionNode = (
   switch (n.name) {
     case 'ORDER_COLUMN':
       return {
-        ...columnNode(n.children[0], collections),
+        ...columnNode(n.children[0], collections, true),
         type: 'asc',
       } as const
     case 'ORDER_ASC':
       return {
-        ...columnNode(n.children[0], collections),
+        ...columnNode(n.children[0], collections, true),
         type: 'asc',
       } as const
     case 'ORDER_DESC':
       return {
-        ...columnNode(n.children[0], collections),
+        ...columnNode(n.children[0], collections, true),
         type: 'desc',
       } as const
     default:

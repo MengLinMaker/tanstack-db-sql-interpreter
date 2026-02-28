@@ -1,13 +1,13 @@
 name: ci
 
 on:
-  pull_request:
+  push:
     branches:
-      - '**'
+      - 'main'
 
 jobs:
-  test:
-    name: test
+  wrangler:
+    name: wrangler
     runs-on: ubuntu-24.04-arm
     # Cache even on failure
     continue-on-error: true
@@ -33,7 +33,10 @@ jobs:
 
       - name: Build affected packages
         shell: bash
-        run: pnpm --filter '...[origin/main]...' build
+        run: pnpm --filter '...[main^]...' build
 
-      - name: Test lint, type and unit
-        run: pnpm --filter '...[origin/main]' '/test:(type|lint|unit)/'
+      - name: Deploy affected apps to Cloudflare
+        run: pnpm --filter '...[main^]' wrangler:deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
