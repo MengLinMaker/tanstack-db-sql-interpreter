@@ -4,8 +4,7 @@ CREATE TABLE
         id integer NOT NULL PRIMARY KEY,
         bed_quantity integer NOT NULL,
         bath_quantity integer NOT NULL,
-        car_quantity integer NOT NULL,
-        CONSTRAINT home_feature_table_unique UNIQUE (bed_quantity, bath_quantity, car_quantity)
+        car_quantity integer NOT NULL
     );
 
 CREATE INDEX IF NOT EXISTS home_feature_table_bed_quantity_idx ON home_feature_table (bed_quantity);
@@ -19,8 +18,7 @@ CREATE TABLE
         id integer NOT NULL PRIMARY KEY,
         suburb_name text NOT NULL,
         postcode text NOT NULL,
-        state_abbreviation text NOT NULL,
-        CONSTRAINT locality_table_suburb_name_postcode_state_abbreviation_unique UNIQUE (suburb_name, postcode, state_abbreviation)
+        state_abbreviation text NOT NULL
     );
 
 CREATE INDEX IF NOT EXISTS locality_table_suburb_name_idx ON locality_table (suburb_name);
