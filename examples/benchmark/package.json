@@ -9,7 +9,7 @@
     "test:lint": "biome lint --write",
     "test:type": "tsgo --noEmit",
     "build": "pnpm vite build",
-    "deploy": "wrangler pages deploy"
+    "wrangler:deploy": "wrangler pages deploy"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.2",
