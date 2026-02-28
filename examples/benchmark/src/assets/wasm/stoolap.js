@@ -1,3 +1,4 @@
+// @ts-nocheck
 /* @ts-self-types="./stoolap.d.ts" */
 
 /**

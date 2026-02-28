@@ -4,7 +4,7 @@ import { sqlSchema } from '../../schema/schema.sql.ts'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
 import { TursoDB } from '../database/tursoDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -228,7 +228,9 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
       onShowResults={async () => {
         const statement = db.prepare(props.query)
         const results = await statement.all()
-        return JSON.stringify(results, null, 2)
+        return {
+          rows: Array.isArray(results) ? results : [],
+        } satisfies QueryResultPayload
       }}
       rows={tableRows()}
     />

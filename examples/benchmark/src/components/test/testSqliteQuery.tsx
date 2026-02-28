@@ -3,7 +3,7 @@ import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
 import { SqliteDB } from '../database/sqliteDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -226,7 +226,9 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
         const result = await db.sql([
           props.query,
         ] as unknown as TemplateStringsArray)
-        return JSON.stringify(result, null, 2)
+        return {
+          rows: Array.isArray(result) ? result : [],
+        } satisfies QueryResultPayload
       }}
       rows={tableRows()}
     />

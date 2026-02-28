@@ -3,7 +3,7 @@ import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
 import { PgliteDB } from '../database/pgliteDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -215,7 +215,11 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={() => JSON.stringify(queryResult(), null, 2)}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )

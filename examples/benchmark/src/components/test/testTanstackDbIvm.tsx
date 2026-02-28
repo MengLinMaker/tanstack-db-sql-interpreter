@@ -5,7 +5,7 @@ import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
 import { TanstackDB } from '../database/tanstackDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
 
 export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   const collections = useContext(TanstackDB)
@@ -156,7 +156,11 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={() => JSON.stringify(queryResult(), null, 2)}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )

@@ -20,6 +20,7 @@
     "@faker-js/faker": "^10.3.0",
     "@menglinmaker/tanstack-db-sql-interpreter": "workspace:*",
     "@tanstack/db": "^0.5.28",
+    "@tanstack/solid-table": "^8.21.3",
     "@tursodatabase/database-wasm": "^0.4.4",
     "codemirror": "^6.0.2",
     "solid-js": "^1.9.10",

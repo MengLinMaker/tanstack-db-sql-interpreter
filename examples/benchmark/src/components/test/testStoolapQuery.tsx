@@ -9,7 +9,7 @@ import {
   StoolapDB,
   type StoolapExecuteRows,
 } from '../database/stoolapDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { type QueryResultPayload, TestTemplate } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -242,7 +242,10 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
         if (result.type !== 'rows') {
           return JSON.stringify(result, null, 2)
         }
-        return JSON.stringify(toRowObjects(result), null, 2)
+        return {
+          rows: toRowObjects(result),
+          columns: result.columns,
+        } satisfies QueryResultPayload
       }}
       rows={tableRows()}
     />

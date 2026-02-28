@@ -4,7 +4,7 @@ import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
 import { DuckdbDB } from '../database/duckdbDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -32,13 +32,6 @@ const getDuckdbRows = async (conn: AsyncDuckDBConnection, sql: string) => {
   const result = await conn.query(sql)
   return normalizeRows(result)
 }
-
-const stringifyRows = (rows: unknown) =>
-  JSON.stringify(
-    rows,
-    (_key, value) => (typeof value === 'bigint' ? Number(value) : value),
-    2,
-  )
 
 const insertBatch = async (
   conn: AsyncDuckDBConnection,
@@ -249,7 +242,9 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
         const conn = await db.connect()
         try {
           const rows = await getDuckdbRows(conn, props.query)
-          return stringifyRows(rows)
+          return {
+            rows: Array.isArray(rows) ? rows : [rows],
+          } satisfies QueryResultPayload
         } finally {
           await conn.close()
         }
