@@ -37,8 +37,9 @@ export function TestTemplate(props: {
   const [resultText, setResultText] = createSignal('')
   const [errorText, setErrorText] = createSignal('')
   const [resultRows, setResultRows] = createSignal<RowObject[] | null>(null)
-  const [rowStrings, setRowStrings] = createSignal<string[]>([])
-  const [rowHeights, setRowHeights] = createSignal<number[]>([])
+  const [rowHeightPx, setRowHeightPx] = createSignal(
+    LINE_HEIGHT_PX + ROW_PADDING_PX,
+  )
 
   const normalizeResultRows = (payload: QueryResultPayload) => {
     const sourceRows = payload.rows ?? []
@@ -72,7 +73,7 @@ export function TestTemplate(props: {
       return rows().length
     },
     getScrollElement: () => scrollRef ?? null,
-    estimateSize: (index) => rowHeights()[index] ?? 80,
+    estimateSize: () => rowHeightPx(),
     overscan: 8,
   })
 
@@ -83,19 +84,18 @@ export function TestTemplate(props: {
     if (typeof result === 'string') {
       setResultText(result)
       setResultRows(null)
-      setRowStrings([])
-      setRowHeights([])
+      setRowHeightPx(LINE_HEIGHT_PX + ROW_PADDING_PX)
     } else {
       const normalized = normalizeResultRows(result)
       setResultText('')
       setResultRows(normalized)
-      const strings = normalized.map((row) => JSON.stringify(row, null, 2))
-      const heights = strings.map((value) => {
-        const lines = value.split('\n').length
-        return lines * LINE_HEIGHT_PX + ROW_PADDING_PX
-      })
-      setRowStrings(strings)
-      setRowHeights(heights)
+      if (normalized.length > 0) {
+        const first = JSON.stringify(normalized[0], null, 2)
+        const lines = first.split('\n').length
+        setRowHeightPx(lines * LINE_HEIGHT_PX + ROW_PADDING_PX)
+      } else {
+        setRowHeightPx(LINE_HEIGHT_PX + ROW_PADDING_PX)
+      }
     }
 
     dialog.showModal()
@@ -200,7 +200,7 @@ export function TestTemplate(props: {
                         'white-space': 'pre-wrap',
                       }}
                     >
-                      {rowStrings()[virtualRow.index] ?? ''}
+                      {JSON.stringify(rows()[virtualRow.index], null, 2)}
                     </pre>
                   </div>
                 )}
