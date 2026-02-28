@@ -7,6 +7,13 @@ const ROW_PADDING_PX = 8
 
 type RowObject = Record<string, unknown>
 
+const stringifyRow = (row: unknown) =>
+  JSON.stringify(
+    row,
+    (_key, value) => (typeof value === 'bigint' ? Number(value) : value),
+    2,
+  )
+
 export type QueryResultPayload = {
   rows: unknown[]
   columns?: string[]
@@ -90,7 +97,7 @@ export function TestTemplate(props: {
       setResultText('')
       setResultRows(normalized)
       if (normalized.length > 0) {
-        const first = JSON.stringify(normalized[0], null, 2)
+        const first = stringifyRow(normalized[0])
         const lines = first.split('\n').length
         setRowHeightPx(lines * LINE_HEIGHT_PX + ROW_PADDING_PX)
       } else {
@@ -200,7 +207,7 @@ export function TestTemplate(props: {
                         'white-space': 'pre-wrap',
                       }}
                     >
-                      {JSON.stringify(rows()[virtualRow.index], null, 2)}
+                      {stringifyRow(rows()[virtualRow.index])}
                     </pre>
                   </div>
                 )}
