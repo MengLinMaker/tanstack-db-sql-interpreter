@@ -1,14 +1,22 @@
-import { createEffect, useContext } from 'solid-js'
+import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
 import { SqliteDB } from '../database/sqliteDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => resolve())
   })
+
+const sqlValue = (value: unknown) => {
+  if (value === null || value === undefined) return 'NULL'
+  if (typeof value === 'number')
+    return Number.isFinite(value) ? `${value}` : 'NULL'
+  if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE'
+  return `'${String(value).replace(/'/g, "''")}'`
+}
 
 const insertHomeFeatureBatch = async (
   db: typeof SqliteDB.defaultValue,
@@ -19,12 +27,13 @@ const insertHomeFeatureBatch = async (
     car_quantity: number
   }>,
 ) =>
-  db.batch((sql) =>
-    rows.map(
-      (row) =>
-        sql`INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity)
-            VALUES (${row.id}, ${row.bed_quantity}, ${row.bath_quantity}, ${row.car_quantity})`,
-    ),
+  db.sql(
+    `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity) VALUES ${rows
+      .map(
+        (row) =>
+          `(${row.id}, ${row.bed_quantity}, ${row.bath_quantity}, ${row.car_quantity})`,
+      )
+      .join(', ')};`,
   )
 
 const insertLocalityBatch = async (
@@ -36,12 +45,13 @@ const insertLocalityBatch = async (
     state_abbreviation: string
   }>,
 ) =>
-  db.batch((sql) =>
-    rows.map(
-      (row) =>
-        sql`INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation)
-            VALUES (${row.id}, ${row.suburb_name}, ${row.postcode}, ${row.state_abbreviation})`,
-    ),
+  db.sql(
+    `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation) VALUES ${rows
+      .map(
+        (row) =>
+          `(${row.id}, ${sqlValue(row.suburb_name)}, ${sqlValue(row.postcode)}, ${sqlValue(row.state_abbreviation)})`,
+      )
+      .join(', ')};`,
   )
 
 const insertHomeBatch = async (
@@ -54,26 +64,28 @@ const insertHomeBatch = async (
     higher_price_aud: number
   }>,
 ) =>
-  db.batch((sql) =>
-    rows.map(
-      (row) =>
-        sql`INSERT INTO home_table (id, locality_table_id, home_feature_table_id, street_address, higher_price_aud)
-            VALUES (${row.id}, ${row.locality_table_id}, ${row.home_feature_table_id}, ${row.street_address}, ${row.higher_price_aud})`,
-    ),
+  db.sql(
+    `INSERT INTO home_table (id, locality_table_id, home_feature_table_id, street_address, higher_price_aud) VALUES ${rows
+      .map(
+        (row) =>
+          `(${row.id}, ${row.locality_table_id}, ${row.home_feature_table_id}, ${sqlValue(row.street_address)}, ${row.higher_price_aud})`,
+      )
+      .join(', ')};`,
   )
 
 const seedTestData = async (db: typeof SqliteDB.defaultValue) => {
-  const batchSize = 500
+  const batchSize = 2000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     await insertHomeFeatureBatch(
       db,
       seed.home_feature_table.slice(i, i + batchSize),
     )
-    await yieldToUi()
   }
   for (let i = 0; i < seed.locality_table.length; i += batchSize) {
     await insertLocalityBatch(db, seed.locality_table.slice(i, i + batchSize))
-    await yieldToUi()
+    if (((i / batchSize) & 1) === 1) {
+      await yieldToUi()
+    }
   }
 }
 
@@ -82,13 +94,15 @@ const insertTestDataNonBlocking = async (
   count: number,
   onProgress?: (current: number) => void,
 ) => {
-  const batchSize = 500
+  const batchSize = 2000
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
     const rows = Array.from({ length: batchCount }, () => generate.home_table())
     await insertHomeBatch(db, rows)
     onProgress?.(i + batchCount)
-    await yieldToUi()
+    if (((i / batchSize) & 1) === 1) {
+      await yieldToUi()
+    }
   }
 }
 
@@ -102,6 +116,7 @@ const clearTables = async (db: typeof SqliteDB.defaultValue) => {
 
 export function TestSqliteQuery(props: { query: string; rowCount: number }) {
   const db = useContext(SqliteDB)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -148,8 +163,11 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
       })
 
       const queryStart = performance.now()
-      await db.sql([props.query] as unknown as TemplateStringsArray)
+      const result = await db.sql([
+        props.query,
+      ] as unknown as TemplateStringsArray)
       const queryDuration = performance.now() - queryStart
+      setQueryResult(Array.isArray(result) ? result : [])
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
 
       setState({
@@ -174,6 +192,7 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -208,12 +227,11 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={async () => {
-        const result = await db.sql([
-          props.query,
-        ] as unknown as TemplateStringsArray)
-        return JSON.stringify(result, null, 2)
-      }}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )

@@ -1,9 +1,9 @@
-import { createEffect, useContext } from 'solid-js'
+import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { generate, seed } from '../../util/dataGenerator.ts'
 import { formatTestError } from '../../util/formatTestError.ts'
 import { PgliteDB } from '../database/pgliteDB.tsx'
-import { TestTemplate } from './testTemplate.tsx'
+import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -110,6 +110,7 @@ const clearTables = async (db: typeof PgliteDB.defaultValue) => {
 
 export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   const db = useContext(PgliteDB)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -168,8 +169,9 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       })
 
       const queryStart = performance.now()
-      await db.query(props.query)
+      const queryResult = await db.query(props.query)
       const queryDuration = performance.now() - queryStart
+      setQueryResult(queryResult.rows)
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
       setState({
         testStatus: 'Finished',
@@ -193,6 +195,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -213,10 +216,11 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
       hasError={Boolean(state.errorStatus)}
       onStart={() => void runTest()}
       onShowError={() => state.errorStatus}
-      onShowResults={async () => {
-        const result = await db.query(props.query)
-        return JSON.stringify(result.rows, null, 2)
-      }}
+      onShowResults={() =>
+        ({
+          rows: queryResult(),
+        }) satisfies QueryResultPayload
+      }
       rows={tableRows()}
     />
   )

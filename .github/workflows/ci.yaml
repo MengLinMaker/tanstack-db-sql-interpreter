@@ -33,7 +33,7 @@ jobs:
 
       - name: Build affected packages
         shell: bash
-        run: pnpm --filter '...[origin/main]' build
+        run: pnpm --filter '...[origin/main]...' build
 
       - name: Test lint, type and unit
         run: pnpm --filter '...[origin/main]' '/test:(type|lint|unit)/'
