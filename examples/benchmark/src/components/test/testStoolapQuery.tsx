@@ -6,8 +6,8 @@ import {
   executeStoolap,
   executeStoolapBatch,
   type StoolapDatabase,
-  type StoolapExecuteRows,
   StoolapDB,
+  type StoolapExecuteRows,
 } from '../database/stoolapDB.tsx'
 import { TestTemplate } from './testTemplate.tsx'
 
@@ -80,7 +80,7 @@ const insertHomeBatchSql = (
     .join('\n')
 
 const seedTestData = async (db: StoolapDatabase) => {
-  const batchSize = 500
+  const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     executeStoolapBatch(
       db,
@@ -104,7 +104,7 @@ const insertTestDataNonBlocking = async (
   count: number,
   onProgress?: (current: number) => void,
 ) => {
-  const batchSize = 500
+  const batchSize = 1000
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
     const rows = Array.from({ length: batchCount }, () => generate.home_table())
@@ -118,9 +118,9 @@ const clearTables = (db: StoolapDatabase) => {
   executeStoolapBatch(
     db,
     `
-    DELETE FROM home_table;
-    DELETE FROM locality_table;
-    DELETE FROM home_feature_table;
+    TRUNCATE home_table;
+    TRUNCATE locality_table;
+    TRUNCATE home_feature_table;
   `,
   )
 }
@@ -151,7 +151,6 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
-      if (!db) throw new Error('Stoolap database is not ready')
       clearTables(db)
 
       const seedStart = performance.now()
@@ -160,9 +159,8 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      const homeRows = props.rowCount
-      await insertTestDataNonBlocking(db, homeRows, (current) => {
-        const progress = Math.min(100, (current / homeRows) * 100)
+      await insertTestDataNonBlocking(db, props.rowCount, (current) => {
+        const progress = Math.min(100, (current / props.rowCount) * 100)
         setState({
           insertStatus: 'Inserting…',
           insertProgress: progress,
