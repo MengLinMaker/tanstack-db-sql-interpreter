@@ -6,12 +6,16 @@ import {
 import { defaultSwitchNodeError } from '../../util/error.ts'
 import type { Collections } from '../../util/types.ts'
 
-export const columnNode = (node: Node.COLUMN, collections: Collections) => {
+export const columnNode = (
+  node: Node.COLUMN,
+  collections: Collections,
+  includeSelected: boolean = false,
+) => {
   const n = node.children[0]
   switch (n.name) {
     case 'COLUMN_NAME__': {
       const column = n.value
-      return findColumnFromTables(collections, column)
+      return findColumnFromTables(collections, column, includeSelected)
     }
     case 'TABLE_COLUMN_NAME': {
       const table = n.children[0].value

@@ -11,7 +11,7 @@ export const groupNode = (node: Node.GROUP, collections: Collections) => {
       case 'BY__':
         break
       case 'COLUMN': {
-        columns.push(columnNode(n, collections))
+        columns.push(columnNode(n, collections, true))
         break
       }
       default:

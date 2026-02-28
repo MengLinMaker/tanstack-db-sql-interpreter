@@ -85,7 +85,7 @@ export const expressionNode = (
     case 'COLUMN': {
       return {
         type: 'column',
-        column: columnNode(n, collections),
+        column: columnNode(n, collections, true),
       }
     }
 

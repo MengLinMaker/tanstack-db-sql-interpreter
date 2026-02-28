@@ -45,12 +45,14 @@ export const collectionProperties = (
 export const findColumnFromTables = (
   collections: Collections,
   column: string,
+  includeSelected: boolean = false,
 ) => {
   const tableNames = Object.keys(collections)
   for (const table of tableNames) {
     const properties = collectionProperties(collections, table)
     if (properties.includes(column)) return { table, column }
   }
+  if (includeSelected) return { table: '$selected', column }
   throw new LiveQuerySqlError(
     `Cannot find column '${column}' in tables: '${tableNames.join(`', '`)}'`,
   )
