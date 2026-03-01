@@ -7,6 +7,7 @@
     "test:lint": {
       "inputs": [
         "{projectRoot}/src/*",
+        "{projectRoot}/functions/*",
         "{projectRoot}/test/*",
         "{projectRoot}/package.json",
         "{workspaceRoot}/biome.json"
@@ -17,6 +18,7 @@
     "test:type": {
       "inputs": [
         "{projectRoot}/src/*",
+        "{projectRoot}/functions/*",
         "{projectRoot}/test/*",
         "{projectRoot}/package.json",
         "{projectRoot}/tsconfig.json",
@@ -28,6 +30,7 @@
     "test:unit": {
       "inputs": [
         "{projectRoot}/src/*",
+        "{projectRoot}/functions/*",
         "{projectRoot}/test/**/*",
         "{projectRoot}/package.json",
         "{projectRoot}/vitest.config.ts"
@@ -37,6 +40,7 @@
     "build": {
       "inputs": [
         "{projectRoot}/src/**/*",
+        "{projectRoot}/functions/*",
         "{projectRoot}/esbuild.ts",
         "{projectRoot}/package.json",
         "{projectRoot}/vite.config.ts"
