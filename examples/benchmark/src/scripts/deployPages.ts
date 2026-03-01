@@ -16,23 +16,16 @@ const readBucketName = () => {
 const bucketName = readBucketName()
 
 const assetsDir = join(__dirname, '../../dist/assets')
-const uploadWasmFuncs = readdirSync(assetsDir)
+readdirSync(assetsDir)
   .filter((file) => file.endsWith('.wasm'))
-  .map(
-    (wasmFile) =>
-      new Promise<void>((resolve) => {
-        const key = join('assets', wasmFile)
-        const filePath = join(assetsDir, wasmFile)
-        console.info(`Putting '${wasmFile}' to r2 as '${key}'`)
-        execSync(
-          `wrangler r2 object put --remote --file "${filePath}" --content-type application/wasm ${bucketName}/${key}`,
-        )
-        rmSync(filePath)
-        console.info(`Successfully put '${wasmFile}' to r2 as '${key}'\n`)
-        resolve()
-      }),
-  )
-await Promise.all(uploadWasmFuncs)
+  .forEach((wasmFile) => {
+    const key = join('assets', wasmFile)
+    const filePath = join(assetsDir, wasmFile)
+    execSync(
+      `wrangler r2 object put --remote --file "${filePath}" --content-type application/wasm ${bucketName}/${key}`,
+      { stdio: 'inherit' },
+    )
+    rmSync(filePath)
+  })
 
-console.info(`Deploying static site to pages`)
-execSync(`wrangler pages deploy`)
+execSync(`wrangler pages deploy`, { stdio: 'inherit' })
