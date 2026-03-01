@@ -3,3 +3,10 @@
 name = "tanstack-db-sql-interpreter-benchmark"
 pages_build_output_dir = "./dist"
 compatibility_date = "2025-02-28"
+
+[[r2_buckets]]
+binding = "WASM_BUCKET"
+bucket_name = "tanstack-db-interpreter-wasm"
+
+[vars]
+WASM_PUBLIC_BASE = "https://<your-public-bucket-domain>"

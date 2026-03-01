@@ -1,6 +1,6 @@
 import { createResource } from 'solid-js'
-// import { DuckdbDB, duckdbFactory } from './database/duckdbDB.tsx'
-// import { DuckdbSchemaMigrator } from './database/duckdbSchemaMigrator.tsx'
+import { DuckdbDB, duckdbFactory } from './database/duckdbDB.tsx'
+import { DuckdbSchemaMigrator } from './database/duckdbSchemaMigrator.tsx'
 import { PgliteDB, pgliteFactory } from './database/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './database/pgliteSchemaMigrator.tsx'
 import { SqliteDB, sqliteFactory } from './database/sqliteDB.tsx'
@@ -10,7 +10,7 @@ import { StoolapSchemaMigrator } from './database/stoolapSchemaMigrator.tsx'
 import { TanstackDB, tanstackDbFactory } from './database/tanstackDB.tsx'
 import { TursoDB, tursoFactory } from './database/tursoDB.tsx'
 import { TursoSchemaMigrator } from './database/tursoSchemaMigrator.tsx'
-// import { TestDuckdbQuery } from './test/testDuckdbQuery.tsx'
+import { TestDuckdbQuery } from './test/testDuckdbQuery.tsx'
 import { TestPgliteDbIvm } from './test/testPgliteDbIvm.tsx'
 import { TestPgliteDbQuery } from './test/testPgliteDbQuery.tsx'
 import { TestSqliteQuery } from './test/testSqliteQuery.tsx'
@@ -21,7 +21,7 @@ import { UsageMonitor } from './usageMonitor.tsx'
 
 export default function SqlTest(props: { query: string; rowCount: number }) {
   const [tursoQueryDb] = createResource(tursoFactory)
-  // const [duckdbQueryDb] = createResource(duckdbFactory)
+  const [duckdbQueryDb] = createResource(duckdbFactory)
   const [stoolapQueryDb] = createResource(stoolapFactory)
 
   return (
@@ -36,13 +36,13 @@ export default function SqlTest(props: { query: string; rowCount: number }) {
         </TanstackDB.Provider>
       </article>
 
-      {/* <article>
+      <article>
         <DuckdbDB.Provider value={duckdbQueryDb.latest!}>
           <DuckdbSchemaMigrator>
             <TestDuckdbQuery query={props.query} rowCount={props.rowCount} />
           </DuckdbSchemaMigrator>
         </DuckdbDB.Provider>
-      </article> */}
+      </article>
 
       <article>
         <StoolapDB.Provider value={stoolapQueryDb.latest!}>
