@@ -22,6 +22,7 @@ export type QueryResultPayload = {
 export function TestTemplate(props: {
   title: string
   subtitle?: string
+  isInitializing: boolean
   isRunning: boolean
   isFinished: boolean
   hasError: boolean
@@ -128,6 +129,10 @@ export function TestTemplate(props: {
           >
             View error
           </button>
+        ) : props.isInitializing ? (
+          <button type="button" class="button-muted" disabled>
+            Initializing…
+          </button>
         ) : !props.isRunning && !props.isFinished ? (
           <button type="button" onClick={props.onStart}>
             Start test
@@ -140,21 +145,61 @@ export function TestTemplate(props: {
       </div>
       <table>
         <tbody>
-          {props.rows.map((row) => (
-            <tr>
-              <td>{row.label}</td>
-              {row.barPercent === undefined ? (
-                <td>{row.value}</td>
-              ) : (
-                <td
-                  class="usage-cell"
-                  style={{ '--bar-width': `${row.barPercent}%` }}
-                >
-                  {row.value}
-                </td>
-              )}
-            </tr>
-          ))}
+          <Show
+            when={!props.isInitializing}
+            fallback={
+              <>
+                <tr>
+                  <td>
+                    <span class="test-skeleton test-skeleton-label" />
+                  </td>
+                  <td>
+                    <span class="test-skeleton test-skeleton-value" />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="test-skeleton test-skeleton-label" />
+                  </td>
+                  <td>
+                    <span class="test-skeleton test-skeleton-value" />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="test-skeleton test-skeleton-label" />
+                  </td>
+                  <td>
+                    <span class="test-skeleton test-skeleton-value" />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="test-skeleton test-skeleton-label" />
+                  </td>
+                  <td>
+                    <span class="test-skeleton test-skeleton-value" />
+                  </td>
+                </tr>
+              </>
+            }
+          >
+            {props.rows.map((row) => (
+              <tr>
+                <td>{row.label}</td>
+                {row.barPercent === undefined ? (
+                  <td>{row.value}</td>
+                ) : (
+                  <td
+                    class="usage-cell"
+                    style={{ '--bar-width': `${row.barPercent}%` }}
+                  >
+                    {row.value}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </Show>
         </tbody>
       </table>
 

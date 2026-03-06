@@ -13,6 +13,7 @@
     "preinstall": "npx only-allow pnpm",
     "knip": "knip",
     "graph": "pnpm nx graph",
+    "watch:format": "nx watch --all -- 'pnpm format'",
     "watch": "nx watch --all -- 'pnpm format && nx run-many -t test:lint test:type test:unit build'"
   },
   "devDependencies": {

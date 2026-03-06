@@ -3,7 +3,7 @@ import { sql } from '@codemirror/lang-sql'
 import { EditorView, keymap } from '@codemirror/view'
 import { basicSetup } from 'codemirror'
 import { createEffect, onCleanup, onMount } from 'solid-js'
-import { schema } from '../schema/collections'
+import { schema } from './database/util/schema/collections'
 
 export default function SqlTextInput(props: {
   value?: string

@@ -1,15 +1,12 @@
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { generate, seed } from '../../util/dataGenerator.ts'
-import { formatTestError } from '../../util/formatTestError.ts'
 import {
-  executeStoolap,
-  executeStoolapBatch,
-  type StoolapDatabase,
-  StoolapDB,
-  type StoolapExecuteRows,
-} from '../database/stoolapDB.tsx'
-import { type QueryResultPayload, TestTemplate } from './testTemplate.tsx'
+  type QueryResultPayload,
+  TestTemplate,
+} from '../components/testTemplate.tsx'
+import { generate, seed } from '../util/dataGenerator.ts'
+import { formatTestError } from '../util/formatTestError.ts'
+import { type SqliteDb, sqliteFactory } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -24,16 +21,8 @@ const sqlValue = (value: unknown) => {
   return `'${String(value).replace(/'/g, "''")}'`
 }
 
-const toRowObjects = (result: StoolapExecuteRows) =>
-  result.rows.map((row) => {
-    const obj: Record<string, unknown> = {}
-    result.columns.forEach((column, index) => {
-      obj[column] = row[index] ?? null
-    })
-    return obj
-  })
-
-const insertHomeFeatureBatchSql = (
+const insertHomeFeatureBatch = async (
+  db: SqliteDb,
   rows: Array<{
     id: number
     bed_quantity: number
@@ -41,14 +30,17 @@ const insertHomeFeatureBatchSql = (
     car_quantity: number
   }>,
 ) =>
-  `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity) VALUES ${rows
-    .map(
-      (row) =>
-        `(${row.id}, ${row.bed_quantity}, ${row.bath_quantity}, ${row.car_quantity})`,
-    )
-    .join(', ')};`
+  db.sql(
+    `INSERT INTO home_feature_table (id, bed_quantity, bath_quantity, car_quantity) VALUES ${rows
+      .map(
+        (row) =>
+          `(${row.id}, ${row.bed_quantity}, ${row.bath_quantity}, ${row.car_quantity})`,
+      )
+      .join(', ')};`,
+  )
 
-const insertLocalityBatchSql = (
+const insertLocalityBatch = async (
+  db: SqliteDb,
   rows: Array<{
     id: number
     suburb_name: string
@@ -56,14 +48,17 @@ const insertLocalityBatchSql = (
     state_abbreviation: string
   }>,
 ) =>
-  `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation) VALUES ${rows
-    .map(
-      (row) =>
-        `(${row.id}, ${sqlValue(row.suburb_name)}, ${sqlValue(row.postcode)}, ${sqlValue(row.state_abbreviation)})`,
-    )
-    .join(', ')};`
+  db.sql(
+    `INSERT INTO locality_table (id, suburb_name, postcode, state_abbreviation) VALUES ${rows
+      .map(
+        (row) =>
+          `(${row.id}, ${sqlValue(row.suburb_name)}, ${sqlValue(row.postcode)}, ${sqlValue(row.state_abbreviation)})`,
+      )
+      .join(', ')};`,
+  )
 
-const insertHomeBatchSql = (
+const insertHomeBatch = async (
+  db: SqliteDb,
   rows: Array<{
     id: number
     locality_table_id: number
@@ -72,28 +67,25 @@ const insertHomeBatchSql = (
     higher_price_aud: number
   }>,
 ) =>
-  `INSERT INTO home_table (id, locality_table_id, home_feature_table_id, street_address, higher_price_aud) VALUES ${rows
-    .map(
-      (row) =>
-        `(${row.id}, ${row.locality_table_id}, ${row.home_feature_table_id}, ${sqlValue(row.street_address)}, ${row.higher_price_aud})`,
-    )
-    .join(', ')};`
+  db.sql(
+    `INSERT INTO home_table (id, locality_table_id, home_feature_table_id, street_address, higher_price_aud) VALUES ${rows
+      .map(
+        (row) =>
+          `(${row.id}, ${row.locality_table_id}, ${row.home_feature_table_id}, ${sqlValue(row.street_address)}, ${row.higher_price_aud})`,
+      )
+      .join(', ')};`,
+  )
 
-const seedTestData = async (db: StoolapDatabase) => {
+const seedTestData = async (db: SqliteDb) => {
   const batchSize = 2000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
-    executeStoolapBatch(
+    await insertHomeFeatureBatch(
       db,
-      insertHomeFeatureBatchSql(
-        seed.home_feature_table.slice(i, i + batchSize),
-      ),
+      seed.home_feature_table.slice(i, i + batchSize),
     )
   }
   for (let i = 0; i < seed.locality_table.length; i += batchSize) {
-    executeStoolapBatch(
-      db,
-      insertLocalityBatchSql(seed.locality_table.slice(i, i + batchSize)),
-    )
+    await insertLocalityBatch(db, seed.locality_table.slice(i, i + batchSize))
     if (((i / batchSize) & 1) === 1) {
       await yieldToUi()
     }
@@ -101,7 +93,7 @@ const seedTestData = async (db: StoolapDatabase) => {
 }
 
 const insertTestDataNonBlocking = async (
-  db: StoolapDatabase,
+  db: SqliteDb,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -109,7 +101,7 @@ const insertTestDataNonBlocking = async (
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
     const rows = Array.from({ length: batchCount }, () => generate.home_table())
-    executeStoolapBatch(db, insertHomeBatchSql(rows))
+    await insertHomeBatch(db, rows)
     onProgress?.(i + batchCount)
     if (((i / batchSize) & 1) === 1) {
       await yieldToUi()
@@ -117,21 +109,20 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = (db: StoolapDatabase) => {
-  executeStoolapBatch(
-    db,
-    `
-    TRUNCATE home_table;
-    TRUNCATE locality_table;
-    TRUNCATE home_feature_table;
-  `,
-  )
+const clearTables = async (db: SqliteDb) => {
+  await db.batch((sql) => [
+    sql`DELETE FROM home_table`,
+    sql`DELETE FROM locality_table`,
+    sql`DELETE FROM home_feature_table`,
+  ])
 }
 
-export function TestStoolapQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(StoolapDB)
+export default function TestSqliteQuery(props: {
+  query: string
+  rowCount: number
+}) {
+  const [dbResource] = createResource<SqliteDb>(sqliteFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
-  const [queryColumns, setQueryColumns] = createSignal<string[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -152,11 +143,12 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
       seedStatus: '',
       insertStatus: '',
       queryStatus: '',
-      insertProgress: 0,
     })
 
     try {
-      clearTables(db)
+      const db = dbResource.latest
+      if (!db) throw new Error('SQLite is not ready yet')
+      await clearTables(db)
 
       const seedStart = performance.now()
       await seedTestData(db)
@@ -164,8 +156,9 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      await insertTestDataNonBlocking(db, props.rowCount, (current) => {
-        const progress = Math.min(100, (current / props.rowCount) * 100)
+      const homeRows = props.rowCount
+      await insertTestDataNonBlocking(db, homeRows, (current) => {
+        const progress = Math.min(100, (current / homeRows) * 100)
         setState({
           insertStatus: 'Inserting…',
           insertProgress: progress,
@@ -178,15 +171,11 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
       })
 
       const queryStart = performance.now()
-      const result = executeStoolap(db, props.query)
+      const result = await db.sql([
+        props.query,
+      ] as unknown as TemplateStringsArray)
       const queryDuration = performance.now() - queryStart
-      if (result.type === 'rows') {
-        setQueryResult(toRowObjects(result))
-        setQueryColumns(result.columns)
-      } else {
-        setQueryResult([])
-        setQueryColumns([])
-      }
+      setQueryResult(Array.isArray(result) ? result : [])
       setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
 
       setState({
@@ -212,7 +201,6 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
     props.query
     props.rowCount
     setQueryResult([])
-    setQueryColumns([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -241,7 +229,8 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
 
   return (
     <TestTemplate
-      title="Stoolap query"
+      title="SQLite query"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}
@@ -250,7 +239,6 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
       onShowResults={() =>
         ({
           rows: queryResult(),
-          columns: queryColumns(),
         }) satisfies QueryResultPayload
       }
       rows={tableRows()}

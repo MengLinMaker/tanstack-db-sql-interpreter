@@ -1,9 +1,12 @@
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { generate, seed } from '../../util/dataGenerator.ts'
-import { formatTestError } from '../../util/formatTestError.ts'
-import { PgliteDB } from '../database/pgliteDB.tsx'
-import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
+import {
+  type QueryResultPayload,
+  TestTemplate,
+} from '../components/testTemplate.tsx'
+import { generate, seed } from '../util/dataGenerator.ts'
+import { formatTestError } from '../util/formatTestError.ts'
+import { type TursoDb, tursoFactory } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -11,7 +14,7 @@ const yieldToUi = () =>
   })
 
 const insertBatch = async (
-  db: typeof PgliteDB.defaultValue,
+  db: TursoDb,
   table: string,
   columns: string[],
   rows: Array<Array<unknown>>,
@@ -28,14 +31,14 @@ const insertBatch = async (
     placeholders.push(`(${rowPlaceholders})`)
     params.push(...row)
   })
-  await db.query(
+  const statement = db.prepare(
     `INSERT INTO ${table} (${columnList})
      VALUES ${placeholders.join(', ')}`,
-    params,
   )
+  await statement.run(...params)
 }
 
-const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
+const seedTestData = async (db: TursoDb) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
@@ -70,7 +73,7 @@ const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
 }
 
 const insertTestDataNonBlocking = async (
-  db: typeof PgliteDB.defaultValue,
+  db: TursoDb,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -101,15 +104,18 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = async (db: typeof PgliteDB.defaultValue) => {
-  await db.exec(
-    'TRUNCATE TABLE home_table, locality_table, home_feature_table RESTART IDENTITY CASCADE',
-  )
-  await db.exec('VACUUM FULL')
+const clearTables = async (db: TursoDb) => {
+  await db.exec('DELETE FROM home_table')
+  await db.exec('DELETE FROM locality_table')
+  await db.exec('DELETE FROM home_feature_table')
 }
 
-export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
-  const db = useContext(PgliteDB)
+export default function TestTursoDbQuery(props: {
+  query: string
+  rowCount: number
+}) {
+  const [dbResource] = createResource<TursoDb>(tursoFactory)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -120,20 +126,6 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
     queryStatus: '',
     insertProgress: 0,
   })
-  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
-  const tableRows = () => [
-    {
-      label: 'Status',
-      value: state.errorStatus ? 'Error' : state.testStatus || 'Idle',
-    },
-    { label: 'Query time', value: state.queryStatus || '—' },
-    { label: 'Seed time', value: state.seedStatus || '—' },
-    {
-      label: 'Insert time',
-      value: state.insertStatus || '—',
-      barPercent: state.insertProgress,
-    },
-  ]
 
   const runTest = async () => {
     setState({
@@ -147,11 +139,10 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
     })
 
     try {
+      const db = dbResource.latest
+      if (!db) throw new Error('Turso is not ready yet')
+
       await clearTables(db)
-      // Define live query
-      await db.live.incrementalQuery(props.query, [], 'id', (r) => {
-        setQueryResult(r.rows)
-      })
 
       const seedStart = performance.now()
       await seedTestData(db)
@@ -159,20 +150,28 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      await insertTestDataNonBlocking(db, props.rowCount, (current) => {
-        const progress = Math.min(100, (current / props.rowCount) * 100)
+      const homeRows = props.rowCount
+      await insertTestDataNonBlocking(db, homeRows, (current) => {
+        const progress = Math.min(100, (current / homeRows) * 100)
         setState({
           insertStatus: 'Inserting…',
           insertProgress: progress,
         })
       })
+
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,
         insertProgress: 100,
       })
 
-      setState({ queryStatus: `${(0).toFixed(1)} ms` })
+      const queryStatement = db.prepare(props.query)
+      const queryStart = performance.now()
+      const results = await queryStatement.all()
+      const queryDuration = performance.now() - queryStart
+      setQueryResult(Array.isArray(results) ? results : [])
+      setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
+
       setState({
         testStatus: 'Finished',
         isFinished: true,
@@ -195,6 +194,7 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -207,9 +207,24 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
     })
   })
 
+  const tableRows = () => [
+    {
+      label: 'Status',
+      value: state.errorStatus ? 'Error' : state.testStatus || 'Idle',
+    },
+    { label: 'Query time', value: state.queryStatus || '—' },
+    { label: 'Seed time', value: state.seedStatus || '—' },
+    {
+      label: 'Insert time',
+      value: state.insertStatus || '—',
+      barPercent: state.insertProgress,
+    },
+  ]
+
   return (
     <TestTemplate
-      title="Pglite IVM"
+      title="Turso query"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

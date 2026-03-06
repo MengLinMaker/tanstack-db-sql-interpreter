@@ -1,11 +1,12 @@
 import { type Collection, createCollection } from '@tanstack/db'
-import { createContext } from 'solid-js'
-import { schemaZod } from '../../schema/collections'
+import { schemaZod } from '../util/schema/collections'
 
-export const tanstackDbFactory = () => {
-  const collections: {
-    [key: string]: Collection<any, any, any, any, any>
-  } = {}
+export type TanstackCollections = {
+  [key: string]: Collection<any, any, any, any, any>
+}
+
+export const tanstackDbFactory = (): TanstackCollections => {
+  const collections: TanstackCollections = {}
   for (const [key, tableSchema] of Object.entries(schemaZod)) {
     collections[key] = createCollection({
       schema: tableSchema,
@@ -16,7 +17,3 @@ export const tanstackDbFactory = () => {
   }
   return collections
 }
-
-export const TanstackDB = createContext<ReturnType<typeof tanstackDbFactory>>(
-  tanstackDbFactory(),
-)

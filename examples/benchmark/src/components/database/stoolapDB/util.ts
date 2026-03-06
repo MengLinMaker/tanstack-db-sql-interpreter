@@ -1,5 +1,5 @@
-import { createContext } from 'solid-js'
-import type { InitOutput } from '../../assets/wasm/stoolap.js'
+import type { InitOutput } from '../../../assets/wasm/stoolap.js'
+import { sqlSchema } from '../util/schema/schema.sql.ts'
 
 export type StoolapExecuteRows = {
   type: 'rows'
@@ -32,15 +32,6 @@ export type StoolapDatabase = {
 
 let initPromise: Promise<InitOutput> | null = null
 
-export const stoolapFactory = async (): Promise<StoolapDatabase> => {
-  const wasm = await import('../../assets/wasm/stoolap.js')
-  if (!initPromise) {
-    initPromise = wasm.default()
-  }
-  await initPromise
-  return new wasm.StoolapDB() as StoolapDatabase
-}
-
 export const parseStoolapResult = (raw: string): StoolapExecuteResult => {
   return JSON.parse(raw) as StoolapExecuteResult
 }
@@ -67,4 +58,16 @@ export const executeStoolapBatch = (
   return result
 }
 
-export const StoolapDB = createContext<StoolapDatabase>(await stoolapFactory())
+export const stoolapFactory = async (): Promise<StoolapDatabase> => {
+  const wasm = await import('../../../assets/wasm/stoolap.js')
+  if (!initPromise) {
+    initPromise = wasm.default()
+  }
+  await initPromise
+  const db = new wasm.StoolapDB() as StoolapDatabase
+  executeStoolapBatch(db, sqlSchema)
+  const tables = executeStoolap(db, `SHOW TABLES;`)
+  if (tables.type !== 'rows' || tables.rows.length === 0)
+    throw new Error('Stoolap schema migration failed: no tables found')
+  return db
+}

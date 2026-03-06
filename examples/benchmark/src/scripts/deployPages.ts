@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process'
-import { readdirSync, readFileSync, rmSync } from 'node:fs'
+import { readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -17,7 +17,12 @@ const bucketName = readBucketName()
 
 const assetsDir = join(__dirname, '../../dist/assets')
 readdirSync(assetsDir)
-  .filter((file) => file.endsWith('.wasm'))
+  .filter((file) => {
+    if (!file.endsWith('.wasm')) return false
+    // Cloudflare has 25mb asset limit - store large files in R2.
+    if (statSync(file).size > 25 * 10 ** 6) return false
+    return true
+  })
   .forEach((wasmFile) => {
     const key = join('assets', wasmFile)
     const filePath = join(assetsDir, wasmFile)

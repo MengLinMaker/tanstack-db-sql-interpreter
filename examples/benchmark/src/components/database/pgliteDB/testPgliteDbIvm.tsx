@@ -1,35 +1,20 @@
-import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm'
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { generate, seed } from '../../util/dataGenerator.ts'
-import { formatTestError } from '../../util/formatTestError.ts'
-import { DuckdbDB } from '../database/duckdbDB.tsx'
-import { type QueryResultPayload, TestTemplate } from './testTemplate.tsx'
+import {
+  type QueryResultPayload,
+  TestTemplate,
+} from '../components/testTemplate.tsx'
+import { generate, seed } from '../util/dataGenerator.ts'
+import { formatTestError } from '../util/formatTestError.ts'
+import { type PgliteDb, pgliteFactory } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => resolve())
   })
 
-type DuckdbResult = {
-  toArray?: () => unknown[]
-}
-
-const normalizeRows = (result: unknown) => {
-  const rows = (result as DuckdbResult | null)?.toArray?.()
-  return rows ?? (result as unknown[])
-}
-
-const queryDuckdbRows = async (conn: AsyncDuckDBConnection, sql: string) => {
-  const startedAt = performance.now()
-  const result = await conn.query(sql)
-  const rows = normalizeRows(result)
-  const durationMs = performance.now() - startedAt
-  return { rows, durationMs }
-}
-
 const insertBatch = async (
-  conn: AsyncDuckDBConnection,
+  db: PgliteDb,
   table: string,
   columns: string[],
   rows: Array<Array<unknown>>,
@@ -38,25 +23,27 @@ const insertBatch = async (
   const columnList = columns.join(', ')
   const placeholders: string[] = []
   const params: unknown[] = []
-  rows.forEach((row) => {
-    const rowPlaceholders = columns.map(() => `?`).join(', ')
+  rows.forEach((row, rowIndex) => {
+    const offset = rowIndex * columns.length
+    const rowPlaceholders = columns
+      .map((_, colIndex) => `$${offset + colIndex + 1}`)
+      .join(', ')
     placeholders.push(`(${rowPlaceholders})`)
     params.push(...row)
   })
-  const stmt = await conn.prepare(
+  await db.query(
     `INSERT INTO ${table} (${columnList})
      VALUES ${placeholders.join(', ')}`,
+    params,
   )
-  await stmt.query(...params)
-  await stmt.close()
 }
 
-const seedTestData = async (conn: AsyncDuckDBConnection) => {
+const seedTestData = async (db: PgliteDb) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
     await insertBatch(
-      conn,
+      db,
       'home_feature_table',
       ['id', 'bed_quantity', 'bath_quantity', 'car_quantity'],
       batch.map((row) => [
@@ -71,7 +58,7 @@ const seedTestData = async (conn: AsyncDuckDBConnection) => {
   for (let i = 0; i < seed.locality_table.length; i += batchSize) {
     const batch = seed.locality_table.slice(i, i + batchSize)
     await insertBatch(
-      conn,
+      db,
       'locality_table',
       ['id', 'suburb_name', 'postcode', 'state_abbreviation'],
       batch.map((row) => [
@@ -86,7 +73,7 @@ const seedTestData = async (conn: AsyncDuckDBConnection) => {
 }
 
 const insertTestDataNonBlocking = async (
-  conn: AsyncDuckDBConnection,
+  db: PgliteDb,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -111,21 +98,24 @@ const insertTestDataNonBlocking = async (
         row.higher_price_aud,
       ])
     }
-    await insertBatch(conn, 'home_table', columns, rows)
+    await insertBatch(db, 'home_table', columns, rows)
     onProgress?.(i + batchCount)
     await yieldToUi()
   }
 }
 
-const clearTables = async (conn: AsyncDuckDBConnection) => {
-  await conn.query('DELETE FROM home_table')
-  await conn.query('DELETE FROM locality_table')
-  await conn.query('DELETE FROM home_feature_table')
+const clearTables = async (db: PgliteDb) => {
+  await db.exec(
+    'TRUNCATE TABLE home_table, locality_table, home_feature_table RESTART IDENTITY CASCADE',
+  )
+  await db.exec('VACUUM FULL')
 }
 
-export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(DuckdbDB)
-  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
+export default function TestPgliteDbIvm(props: {
+  query: string
+  rowCount: number
+}) {
+  const [dbResource] = createResource<PgliteDb>(pgliteFactory)
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -136,83 +126,7 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
     queryStatus: '',
     insertProgress: 0,
   })
-
-  const runTest = async () => {
-    setState({
-      isRunning: true,
-      isFinished: false,
-      errorStatus: '',
-      testStatus: 'Running…',
-      seedStatus: '',
-      insertStatus: '',
-      queryStatus: '',
-    })
-
-    let conn: AsyncDuckDBConnection | null = null
-    try {
-      conn = await db.connect()
-      await clearTables(conn)
-
-      const seedStart = performance.now()
-      await seedTestData(conn)
-      const seedDuration = performance.now() - seedStart
-      setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
-
-      const insertStart = performance.now()
-      const homeRows = props.rowCount
-      await insertTestDataNonBlocking(conn, homeRows, (current) => {
-        const progress = Math.min(100, (current / homeRows) * 100)
-        setState({
-          insertStatus: 'Inserting…',
-          insertProgress: progress,
-        })
-      })
-      const insertDuration = performance.now() - insertStart
-      setState({
-        insertStatus: `${insertDuration.toFixed(1)} ms`,
-        insertProgress: 100,
-      })
-
-      const { rows, durationMs } = await queryDuckdbRows(conn, props.query)
-      setQueryResult(Array.isArray(rows) ? rows : [rows])
-      setState({ queryStatus: `${durationMs.toFixed(1)} ms` })
-
-      setState({
-        testStatus: 'Finished',
-        isFinished: true,
-      })
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(error)
-      }
-      setState({
-        errorStatus: formatTestError(error),
-        testStatus: 'Test failed',
-      })
-    } finally {
-      await conn?.close()
-      setState({
-        isRunning: false,
-      })
-    }
-  }
-
-  createEffect(() => {
-    props.query
-    props.rowCount
-    setQueryResult([])
-    setState({
-      insertStatus: '',
-      seedStatus: '',
-      errorStatus: '',
-      isRunning: false,
-      testStatus: '',
-      isFinished: false,
-      queryStatus: '',
-      insertProgress: 0,
-    })
-  })
-
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const tableRows = () => [
     {
       label: 'Status',
@@ -227,10 +141,84 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
     },
   ]
 
+  const runTest = async () => {
+    setState({
+      isRunning: true,
+      isFinished: false,
+      errorStatus: '',
+      testStatus: 'Running…',
+      seedStatus: '',
+      insertStatus: '',
+      queryStatus: '',
+    })
+
+    try {
+      const db = dbResource.latest
+      if (!db) throw new Error('PGlite is not ready yet')
+      await clearTables(db)
+      // Define live query
+      await db.live.incrementalQuery(props.query, [], 'id', (r) => {
+        setQueryResult(r.rows)
+      })
+
+      const seedStart = performance.now()
+      await seedTestData(db)
+      const seedDuration = performance.now() - seedStart
+      setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
+
+      const insertStart = performance.now()
+      await insertTestDataNonBlocking(db, props.rowCount, (current) => {
+        const progress = Math.min(100, (current / props.rowCount) * 100)
+        setState({
+          insertStatus: 'Inserting…',
+          insertProgress: progress,
+        })
+      })
+      const insertDuration = performance.now() - insertStart
+      setState({
+        insertStatus: `${insertDuration.toFixed(1)} ms`,
+        insertProgress: 100,
+      })
+
+      setState({ queryStatus: `${(0).toFixed(1)} ms` })
+      setState({
+        testStatus: 'Finished',
+        isFinished: true,
+      })
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error)
+      }
+      setState({
+        errorStatus: formatTestError(error),
+        testStatus: 'Test failed',
+      })
+    } finally {
+      setState({
+        isRunning: false,
+      })
+    }
+  }
+
+  createEffect(() => {
+    props.query
+    props.rowCount
+    setState({
+      insertStatus: '',
+      seedStatus: '',
+      errorStatus: '',
+      isRunning: false,
+      testStatus: '',
+      isFinished: false,
+      queryStatus: '',
+      insertProgress: 0,
+    })
+  })
+
   return (
     <TestTemplate
-      title="DuckDB query"
-      subtitle="DuckDB in WebAssembly"
+      title="Pglite IVM"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

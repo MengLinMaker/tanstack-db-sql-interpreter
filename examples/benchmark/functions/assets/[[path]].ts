@@ -9,9 +9,13 @@ export async function onRequest(context: {
   if (request.method !== 'GET' && request.method !== 'HEAD') return next()
   if (!url.pathname.endsWith('.wasm')) return next()
 
-  const key = url.pathname
+  const key = url.pathname.substring(1)
+  console.info('WASM key:', key)
   const object = await env.WASM_BUCKET.get(key)
-  if (!object) return next()
+  if (!object) {
+    console.error('WASM key not found:', key)
+    return next()
+  }
 
   const headers = new Headers()
   object.writeHttpMetadata(headers)
