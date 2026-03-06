@@ -226,6 +226,7 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Turso query"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

@@ -227,6 +227,7 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="SQLite query"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

@@ -215,6 +215,7 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Pglite IVM"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

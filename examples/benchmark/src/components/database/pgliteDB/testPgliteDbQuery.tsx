@@ -216,6 +216,7 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Pglite query"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

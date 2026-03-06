@@ -247,6 +247,7 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
   return (
     <TestTemplate
       title="Stoolap query"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

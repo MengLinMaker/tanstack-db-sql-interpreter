@@ -355,6 +355,45 @@ ul {
   font-weight: 600;
 }
 
+.button-muted {
+  background: var(--stroke);
+  color: var(--ink-muted);
+  cursor: not-allowed;
+}
+
+.test-skeleton {
+  display: block;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  animation: test-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.test-skeleton-label {
+  width: 55%;
+}
+
+.test-skeleton-value {
+  width: 80%;
+}
+
+@keyframes test-skeleton-pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
 .sql-input {
   border: 1px solid var(--stroke);
 }

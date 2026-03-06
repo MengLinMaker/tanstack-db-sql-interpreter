@@ -236,6 +236,7 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
     <TestTemplate
       title="DuckDB query"
       subtitle="DuckDB in WebAssembly"
+      isInitializing={dbResource.loading}
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}
