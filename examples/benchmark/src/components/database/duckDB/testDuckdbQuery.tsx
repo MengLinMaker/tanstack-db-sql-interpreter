@@ -1,5 +1,5 @@
-import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm'
-import { createEffect, createSignal, useContext } from 'solid-js'
+import type { AsyncDuckDB, AsyncDuckDBConnection } from '@duckdb/duckdb-wasm'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import {
   type QueryResultPayload,
@@ -7,7 +7,7 @@ import {
 } from '../components/testTemplate.tsx'
 import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
-import { DuckdbDB } from './duckdbDB.tsx'
+import { duckdbFactory } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -127,7 +127,7 @@ const clearTables = async (conn: AsyncDuckDBConnection) => {
 }
 
 export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(DuckdbDB)
+  const [dbResource] = createResource<AsyncDuckDB>(duckdbFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
@@ -153,6 +153,8 @@ export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
 
     let conn: AsyncDuckDBConnection | null = null
     try {
+      const db = dbResource.latest
+      if (!db) throw new Error('DuckDB is not ready yet')
       conn = await db.connect()
       await clearTables(conn)
 

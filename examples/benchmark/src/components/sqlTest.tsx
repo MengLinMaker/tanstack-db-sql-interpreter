@@ -1,6 +1,4 @@
 import { createResource } from 'solid-js'
-import { DuckdbDB, duckdbFactory } from './database/duckDB/duckdbDB.tsx'
-import { DuckdbSchemaMigrator } from './database/duckDB/duckdbSchemaMigrator.tsx'
 import { TestDuckdbQuery } from './database/duckDB/testDuckdbQuery.tsx'
 import { PgliteDB, pgliteFactory } from './database/pgliteDB/pgliteDB.tsx'
 import { PgliteSchemaMigrator } from './database/pgliteDB/pgliteSchemaMigrator.tsx'
@@ -24,7 +22,6 @@ import { UsageMonitor } from './monitor/usageMonitor.tsx'
 
 export default function SqlTest(props: { query: string; rowCount: number }) {
   const [tursoQueryDb] = createResource(tursoFactory)
-  const [duckdbQueryDb] = createResource(duckdbFactory)
   const [stoolapQueryDb] = createResource(stoolapFactory)
 
   return (
@@ -40,11 +37,7 @@ export default function SqlTest(props: { query: string; rowCount: number }) {
       </article>
 
       <article>
-        <DuckdbDB.Provider value={duckdbQueryDb.latest!}>
-          <DuckdbSchemaMigrator>
-            <TestDuckdbQuery query={props.query} rowCount={props.rowCount} />
-          </DuckdbSchemaMigrator>
-        </DuckdbDB.Provider>
+        <TestDuckdbQuery query={props.query} rowCount={props.rowCount} />
       </article>
 
       <article>
