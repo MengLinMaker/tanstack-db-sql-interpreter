@@ -1,4 +1,4 @@
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import {
   type QueryResultPayload,
@@ -6,7 +6,7 @@ import {
 } from '../components/testTemplate.tsx'
 import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
-import { PgliteDB } from './pgliteDB.tsx'
+import { type PgliteDb, pgliteFactory } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -14,7 +14,7 @@ const yieldToUi = () =>
   })
 
 const insertBatch = async (
-  db: typeof PgliteDB.defaultValue,
+  db: PgliteDb,
   table: string,
   columns: string[],
   rows: Array<Array<unknown>>,
@@ -38,7 +38,7 @@ const insertBatch = async (
   )
 }
 
-const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
+const seedTestData = async (db: PgliteDb) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
@@ -73,7 +73,7 @@ const seedTestData = async (db: typeof PgliteDB.defaultValue) => {
 }
 
 const insertTestDataNonBlocking = async (
-  db: typeof PgliteDB.defaultValue,
+  db: PgliteDb,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -104,7 +104,7 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = async (db: typeof PgliteDB.defaultValue) => {
+const clearTables = async (db: PgliteDb) => {
   await db.exec(
     'TRUNCATE TABLE home_table, locality_table, home_feature_table RESTART IDENTITY CASCADE',
   )
@@ -112,7 +112,7 @@ const clearTables = async (db: typeof PgliteDB.defaultValue) => {
 }
 
 export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(PgliteDB)
+  const [dbResource] = createResource<PgliteDb>(pgliteFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
@@ -150,6 +150,8 @@ export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
+      const db = dbResource.latest
+      if (!db) throw new Error('PGlite is not ready yet')
       await clearTables(db)
 
       const seedStart = performance.now()

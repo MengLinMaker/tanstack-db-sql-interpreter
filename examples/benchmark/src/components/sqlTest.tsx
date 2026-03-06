@@ -1,7 +1,5 @@
 import { createResource } from 'solid-js'
 import { TestDuckdbQuery } from './database/duckDB/testDuckdbQuery.tsx'
-import { PgliteDB, pgliteFactory } from './database/pgliteDB/pgliteDB.tsx'
-import { PgliteSchemaMigrator } from './database/pgliteDB/pgliteSchemaMigrator.tsx'
 import { TestPgliteDbIvm } from './database/pgliteDB/testPgliteDbIvm.tsx'
 import { TestPgliteDbQuery } from './database/pgliteDB/testPgliteDbQuery.tsx'
 import { SqliteDB, sqliteFactory } from './database/sqliteDB/sqliteDB.tsx'
@@ -46,17 +44,9 @@ export default function SqlTest(props: { query: string; rowCount: number }) {
         </SqliteSchemaMigrator>
       </SqliteDB.Provider>
 
-      <PgliteDB.Provider value={pgliteFactory()}>
-        <PgliteSchemaMigrator>
-          <TestPgliteDbIvm query={props.query} rowCount={props.rowCount} />
-        </PgliteSchemaMigrator>
-      </PgliteDB.Provider>
+      <TestPgliteDbIvm query={props.query} rowCount={props.rowCount} />
 
-      <PgliteDB.Provider value={pgliteFactory()}>
-        <PgliteSchemaMigrator>
-          <TestPgliteDbQuery query={props.query} rowCount={props.rowCount} />
-        </PgliteSchemaMigrator>
-      </PgliteDB.Provider>
+      <TestPgliteDbQuery query={props.query} rowCount={props.rowCount} />
 
       <TursoDB.Provider value={tursoQueryDb.latest!}>
         <TursoSchemaMigrator>
