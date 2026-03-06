@@ -21,7 +21,7 @@ readdirSync(assetsDir)
     if (!file.endsWith('.wasm')) return false
     const filePath = join(assetsDir, file)
     // Cloudflare has 25mb asset limit - store large files in R2.
-    if (statSync(filePath).size > 25 * 10 ** 6) return false
+    if (statSync(filePath).size < 25 * 10 ** 6) return false
     return true
   })
   .forEach((wasmFile) => {
