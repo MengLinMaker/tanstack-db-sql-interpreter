@@ -1,10 +1,13 @@
 import type { AsyncDuckDBConnection } from '@duckdb/duckdb-wasm'
 import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { generate, seed } from '../../util/dataGenerator.ts'
-import { formatTestError } from '../../util/formatTestError.ts'
-import { DuckdbDB } from '../database/duckdbDB.tsx'
-import { type QueryResultPayload, TestTemplate } from './testTemplate.tsx'
+import {
+  type QueryResultPayload,
+  TestTemplate,
+} from '../components/testTemplate.tsx'
+import { generate, seed } from '../util/dataGenerator.ts'
+import { formatTestError } from '../util/formatTestError.ts'
+import { DuckdbDB } from './duckdbDB.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {

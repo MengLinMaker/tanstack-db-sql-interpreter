@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker/locale/en_AU'
 import type { z } from 'zod/mini'
-import type { schemaZod } from '../schema/collections.ts'
+import type { schemaZod } from './schema/collections.ts'
 
 const possible_home_feature_table: z.infer<
   typeof schemaZod.home_feature_table

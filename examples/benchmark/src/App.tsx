@@ -1,5 +1,5 @@
 import { createSignal, lazy } from 'solid-js'
-import { queries } from './schema/queries.ts'
+import { queries } from './components/database/util/queries.ts'
 import { clearOpfs } from './util/clearOpfs.ts'
 
 const SqlTextInput = lazy(() => import('./components/sqlTextInput.tsx'))

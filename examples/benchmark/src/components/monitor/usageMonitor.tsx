@@ -1,5 +1,5 @@
 import { createEffect, createSignal, Show } from 'solid-js'
-import { usePerformance } from '../hooks/usePerformance.ts'
+import { usePerformance } from './usePerformance.ts'
 
 export function UsageMonitor(props: { intervalMs?: number }) {
   const usage = usePerformance(props.intervalMs ?? 1000)

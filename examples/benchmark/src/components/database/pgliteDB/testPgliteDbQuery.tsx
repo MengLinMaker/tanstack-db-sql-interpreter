@@ -1,9 +1,12 @@
 import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { generate, seed } from '../../util/dataGenerator.ts'
-import { formatTestError } from '../../util/formatTestError.ts'
-import { PgliteDB } from '../database/pgliteDB.tsx'
-import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
+import {
+  type QueryResultPayload,
+  TestTemplate,
+} from '../components/testTemplate.tsx'
+import { generate, seed } from '../util/dataGenerator.ts'
+import { formatTestError } from '../util/formatTestError.ts'
+import { PgliteDB } from './pgliteDB.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -108,8 +111,9 @@ const clearTables = async (db: typeof PgliteDB.defaultValue) => {
   await db.exec('VACUUM FULL')
 }
 
-export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
+export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
   const db = useContext(PgliteDB)
+  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -120,7 +124,6 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
     queryStatus: '',
     insertProgress: 0,
   })
-  const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const tableRows = () => [
     {
       label: 'Status',
@@ -148,10 +151,6 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
 
     try {
       await clearTables(db)
-      // Define live query
-      await db.live.incrementalQuery(props.query, [], 'id', (r) => {
-        setQueryResult(r.rows)
-      })
 
       const seedStart = performance.now()
       await seedTestData(db)
@@ -172,7 +171,11 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
         insertProgress: 100,
       })
 
-      setState({ queryStatus: `${(0).toFixed(1)} ms` })
+      const queryStart = performance.now()
+      const queryResult = await db.query(props.query)
+      const queryDuration = performance.now() - queryStart
+      setQueryResult(queryResult.rows)
+      setState({ queryStatus: `${queryDuration.toFixed(1)} ms` })
       setState({
         testStatus: 'Finished',
         isFinished: true,
@@ -195,6 +198,7 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
   createEffect(() => {
     props.query
     props.rowCount
+    setQueryResult([])
     setState({
       insertStatus: '',
       seedStatus: '',
@@ -209,7 +213,7 @@ export function TestPgliteDbIvm(props: { query: string; rowCount: number }) {
 
   return (
     <TestTemplate
-      title="Pglite IVM"
+      title="Pglite query"
       isRunning={state.isRunning}
       isFinished={state.isFinished}
       hasError={Boolean(state.errorStatus)}

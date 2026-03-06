@@ -1,15 +1,18 @@
 import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { generate, seed } from '../../util/dataGenerator.ts'
-import { formatTestError } from '../../util/formatTestError.ts'
+import {
+  type QueryResultPayload,
+  TestTemplate,
+} from '../components/testTemplate.tsx'
+import { generate, seed } from '../util/dataGenerator.ts'
+import { formatTestError } from '../util/formatTestError.ts'
 import {
   executeStoolap,
   executeStoolapBatch,
   type StoolapDatabase,
   StoolapDB,
   type StoolapExecuteRows,
-} from '../database/stoolapDB.tsx'
-import { type QueryResultPayload, TestTemplate } from './testTemplate.tsx'
+} from './stoolapDB.tsx'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {

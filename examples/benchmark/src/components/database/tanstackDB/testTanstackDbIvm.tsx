@@ -2,10 +2,13 @@ import { liveQuerySql } from '@menglinmaker/tanstack-db-sql-interpreter'
 import { createCollection, liveQueryCollectionOptions } from '@tanstack/db'
 import { createEffect, createSignal, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { generate, seed } from '../../util/dataGenerator.ts'
-import { formatTestError } from '../../util/formatTestError.ts'
-import { TanstackDB } from '../database/tanstackDB.tsx'
-import { TestTemplate, type QueryResultPayload } from './testTemplate.tsx'
+import {
+  type QueryResultPayload,
+  TestTemplate,
+} from '../components/testTemplate.tsx'
+import { generate, seed } from '../util/dataGenerator.ts'
+import { formatTestError } from '../util/formatTestError.ts'
+import { TanstackDB } from './tanstackDB.tsx'
 
 export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
   const collections = useContext(TanstackDB)

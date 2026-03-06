@@ -1,6 +1,6 @@
 import { type Collection, createCollection } from '@tanstack/db'
 import { createContext } from 'solid-js'
-import { schemaZod } from '../../schema/collections'
+import { schemaZod } from '../util/schema/collections'
 
 export const tanstackDbFactory = () => {
   const collections: {

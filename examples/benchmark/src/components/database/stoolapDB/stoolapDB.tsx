@@ -1,5 +1,5 @@
 import { createContext } from 'solid-js'
-import type { InitOutput } from '../../assets/wasm/stoolap.js'
+import type { InitOutput } from '../../../assets/wasm/stoolap.js'
 
 export type StoolapExecuteRows = {
   type: 'rows'
@@ -33,7 +33,7 @@ export type StoolapDatabase = {
 let initPromise: Promise<InitOutput> | null = null
 
 export const stoolapFactory = async (): Promise<StoolapDatabase> => {
-  const wasm = await import('../../assets/wasm/stoolap.js')
+  const wasm = await import('../../../assets/wasm/stoolap.js')
   if (!initPromise) {
     initPromise = wasm.default()
   }

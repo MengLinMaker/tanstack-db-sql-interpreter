@@ -1,5 +1,5 @@
 import { createSignal, type JSX, onMount, Show, useContext } from 'solid-js'
-import { sqlSchema } from '../../schema/schema.sql.ts'
+import { sqlSchema } from '../util/schema/schema.sql.ts'
 import { SqliteDB } from './sqliteDB.tsx'
 
 type SqliteSchemaMigratorProps = {
