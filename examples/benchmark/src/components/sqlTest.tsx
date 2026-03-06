@@ -26,59 +26,43 @@ export default function SqlTest(props: { query: string; rowCount: number }) {
 
   return (
     <section class="grid">
-      <article>
-        <UsageMonitor intervalMs={100}></UsageMonitor>
-      </article>
+      <UsageMonitor intervalMs={100}></UsageMonitor>
 
-      <article>
-        <TanstackDB.Provider value={tanstackDbFactory()}>
-          <TestTanstackDbIvm query={props.query} rowCount={props.rowCount} />
-        </TanstackDB.Provider>
-      </article>
+      <TanstackDB.Provider value={tanstackDbFactory()}>
+        <TestTanstackDbIvm query={props.query} rowCount={props.rowCount} />
+      </TanstackDB.Provider>
 
-      <article>
-        <TestDuckdbQuery query={props.query} rowCount={props.rowCount} />
-      </article>
+      <TestDuckdbQuery query={props.query} rowCount={props.rowCount} />
 
-      <article>
-        <StoolapDB.Provider value={stoolapQueryDb.latest!}>
-          <StoolapSchemaMigrator>
-            <TestStoolapQuery query={props.query} rowCount={props.rowCount} />
-          </StoolapSchemaMigrator>
-        </StoolapDB.Provider>
-      </article>
+      <StoolapDB.Provider value={stoolapQueryDb.latest!}>
+        <StoolapSchemaMigrator>
+          <TestStoolapQuery query={props.query} rowCount={props.rowCount} />
+        </StoolapSchemaMigrator>
+      </StoolapDB.Provider>
 
-      <article>
-        <SqliteDB.Provider value={sqliteFactory()}>
-          <SqliteSchemaMigrator>
-            <TestSqliteQuery query={props.query} rowCount={props.rowCount} />
-          </SqliteSchemaMigrator>
-        </SqliteDB.Provider>
-      </article>
+      <SqliteDB.Provider value={sqliteFactory()}>
+        <SqliteSchemaMigrator>
+          <TestSqliteQuery query={props.query} rowCount={props.rowCount} />
+        </SqliteSchemaMigrator>
+      </SqliteDB.Provider>
 
-      <article>
-        <PgliteDB.Provider value={pgliteFactory()}>
-          <PgliteSchemaMigrator>
-            <TestPgliteDbIvm query={props.query} rowCount={props.rowCount} />
-          </PgliteSchemaMigrator>
-        </PgliteDB.Provider>
-      </article>
+      <PgliteDB.Provider value={pgliteFactory()}>
+        <PgliteSchemaMigrator>
+          <TestPgliteDbIvm query={props.query} rowCount={props.rowCount} />
+        </PgliteSchemaMigrator>
+      </PgliteDB.Provider>
 
-      <article>
-        <PgliteDB.Provider value={pgliteFactory()}>
-          <PgliteSchemaMigrator>
-            <TestPgliteDbQuery query={props.query} rowCount={props.rowCount} />
-          </PgliteSchemaMigrator>
-        </PgliteDB.Provider>
-      </article>
+      <PgliteDB.Provider value={pgliteFactory()}>
+        <PgliteSchemaMigrator>
+          <TestPgliteDbQuery query={props.query} rowCount={props.rowCount} />
+        </PgliteSchemaMigrator>
+      </PgliteDB.Provider>
 
-      <article>
-        <TursoDB.Provider value={tursoQueryDb.latest!}>
-          <TursoSchemaMigrator>
-            <TestTursoDbQuery query={props.query} rowCount={props.rowCount} />
-          </TursoSchemaMigrator>
-        </TursoDB.Provider>
-      </article>
+      <TursoDB.Provider value={tursoQueryDb.latest!}>
+        <TursoSchemaMigrator>
+          <TestTursoDbQuery query={props.query} rowCount={props.rowCount} />
+        </TursoSchemaMigrator>
+      </TursoDB.Provider>
     </section>
   )
 }
