@@ -110,7 +110,10 @@ const clearTables = async (db: TursoDb) => {
   await db.exec('DELETE FROM home_feature_table')
 }
 
-export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
+export default function TestTursoDbQuery(props: {
+  query: string
+  rowCount: number
+}) {
   const [dbResource] = createResource<TursoDb>(tursoFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({

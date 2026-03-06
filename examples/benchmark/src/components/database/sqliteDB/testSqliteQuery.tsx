@@ -6,7 +6,7 @@ import {
 } from '../components/testTemplate.tsx'
 import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
-import { sqliteFactory, type SqliteDb } from './util.ts'
+import { type SqliteDb, sqliteFactory } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -117,7 +117,10 @@ const clearTables = async (db: SqliteDb) => {
   ])
 }
 
-export function TestSqliteQuery(props: { query: string; rowCount: number }) {
+export default function TestSqliteQuery(props: {
+  query: string
+  rowCount: number
+}) {
   const [dbResource] = createResource<SqliteDb>(sqliteFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({

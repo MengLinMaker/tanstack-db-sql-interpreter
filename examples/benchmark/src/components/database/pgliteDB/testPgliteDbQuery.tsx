@@ -111,7 +111,10 @@ const clearTables = async (db: PgliteDb) => {
   await db.exec('VACUUM FULL')
 }
 
-export function TestPgliteDbQuery(props: { query: string; rowCount: number }) {
+export default function TestPgliteDbQuery(props: {
+  query: string
+  rowCount: number
+}) {
   const [dbResource] = createResource<PgliteDb>(pgliteFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({

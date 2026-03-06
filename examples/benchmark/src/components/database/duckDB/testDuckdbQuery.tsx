@@ -126,7 +126,10 @@ const clearTables = async (conn: AsyncDuckDBConnection) => {
   await conn.query('DELETE FROM home_feature_table')
 }
 
-export function TestDuckdbQuery(props: { query: string; rowCount: number }) {
+export default function TestDuckdbQuery(props: {
+  query: string
+  rowCount: number
+}) {
   const [dbResource] = createResource<AsyncDuckDB>(duckdbFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({

@@ -4,9 +4,6 @@ import { sqlSchema } from '../util/schema/schema.sql.ts'
 
 export type PgliteDb = PGliteWithLive
 
-// Preload PGlite to avoid double compiling WASM
-new PGlite('memory://', {})
-
 export const pgliteFactory = async () => {
   const db = new PGlite('memory://', {
     extensions: {

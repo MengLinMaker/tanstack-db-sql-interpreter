@@ -10,7 +10,10 @@ import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
 import { type TanstackCollections, tanstackDbFactory } from './util.ts'
 
-export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
+export default function TestTanstackDbIvm(props: {
+  query: string
+  rowCount: number
+}) {
   const [collectionsResource] =
     createResource<TanstackCollections>(tanstackDbFactory)
   const [state, setState] = createStore({

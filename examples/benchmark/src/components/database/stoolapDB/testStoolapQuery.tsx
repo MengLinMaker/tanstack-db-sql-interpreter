@@ -131,7 +131,10 @@ const clearTables = (db: StoolapDatabase) => {
   )
 }
 
-export function TestStoolapQuery(props: { query: string; rowCount: number }) {
+export default function TestStoolapQuery(props: {
+  query: string
+  rowCount: number
+}) {
   const [dbResource] = createResource<StoolapDatabase>(stoolapFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [queryColumns, setQueryColumns] = createSignal<string[]>([])
