@@ -177,11 +177,6 @@ export default function TestTursoDbQuery(props: {
         isFinished: true,
       })
     } catch (error) {
-      try {
-        await db.exec('ROLLBACK')
-      } catch {
-        // Ignore rollback failures.
-      }
       if (error instanceof Error) {
         console.error(error)
       }
