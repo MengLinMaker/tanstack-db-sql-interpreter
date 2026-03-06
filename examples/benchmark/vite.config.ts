@@ -28,8 +28,4 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
-  build: {
-    // For testing
-    sourcemap: true,
-  },
 })
