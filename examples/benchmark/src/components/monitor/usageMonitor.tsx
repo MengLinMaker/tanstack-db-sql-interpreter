@@ -1,7 +1,7 @@
 import { createEffect, createSignal, Show } from 'solid-js'
 import { usePerformance } from './usePerformance.ts'
 
-export function UsageMonitor(props: { intervalMs?: number }) {
+export default function UsageMonitor(props: { intervalMs?: number }) {
   const usage = usePerformance(props.intervalMs ?? 1000)
   const [maxCpuPercent, setMaxCpuPercent] = createSignal(0)
   const [maxUsedMb, setMaxUsedMb] = createSignal(0)
@@ -62,10 +62,7 @@ export function UsageMonitor(props: { intervalMs?: number }) {
           <tr>
             <td>Heap mem</td>
             <td>
-              <Show
-                when={usage.memorySupported()}
-                fallback="Unsupported browser"
-              >
+              <Show when={usage.memorySupported()} fallback="Unsupported">
                 {usage.usedMb()} MB
               </Show>
             </td>
@@ -73,10 +70,7 @@ export function UsageMonitor(props: { intervalMs?: number }) {
           <tr>
             <td>Max mem</td>
             <td>
-              <Show
-                when={usage.memorySupported()}
-                fallback="Unsupported browser"
-              >
+              <Show when={usage.memorySupported()} fallback="Unsupported">
                 {maxUsedMb()} MB
               </Show>
             </td>
