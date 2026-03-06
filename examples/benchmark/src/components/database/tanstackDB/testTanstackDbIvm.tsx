@@ -1,6 +1,6 @@
 import { liveQuerySql } from '@menglinmaker/tanstack-db-sql-interpreter'
 import { createCollection, liveQueryCollectionOptions } from '@tanstack/db'
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import {
   type QueryResultPayload,
@@ -8,10 +8,11 @@ import {
 } from '../components/testTemplate.tsx'
 import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
-import { TanstackDB } from './tanstackDB.tsx'
+import { type TanstackCollections, tanstackDbFactory } from './util.ts'
 
 export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
-  const collections = useContext(TanstackDB)
+  const [collectionsResource] =
+    createResource<TanstackCollections>(tanstackDbFactory)
   const [state, setState] = createStore({
     insertStatus: '',
     seedStatus: '',
@@ -23,23 +24,29 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     insertProgress: 0,
   })
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
-  const insertBatch = (tableName: string, rows: any[]) =>
-    collections[tableName]!.insert(rows)
+  const insertBatch = (
+    collections: TanstackCollections,
+    tableName: string,
+    rows: any[],
+  ) => collections[tableName]!.insert(rows)
 
-  const seedTestData = () => {
-    insertBatch('home_feature_table', seed.home_feature_table)
-    insertBatch('locality_table', seed.locality_table)
-    insertBatch('home_table', [generate.home_table()])
+  const seedTestData = (collections: TanstackCollections) => {
+    insertBatch(collections, 'home_feature_table', seed.home_feature_table)
+    insertBatch(collections, 'locality_table', seed.locality_table)
+    insertBatch(collections, 'home_table', [generate.home_table()])
   }
 
-  const insertTestDataNonBlocking = (count: number) => {
+  const insertTestDataNonBlocking = (
+    collections: TanstackCollections,
+    count: number,
+  ) => {
     const batchSize = 1000
     for (let i = 0; i < count; i += batchSize) {
       const batchCount = Math.min(batchSize, count - i)
       const rows = Array.from({ length: batchCount }, () =>
         generate.home_table(),
       )
-      insertBatch('home_table', rows)
+      insertBatch(collections, 'home_table', rows)
       const percentProgress = Math.round(
         Math.min(100, ((i + batchCount) / count) * 100),
       )
@@ -47,7 +54,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     }
   }
 
-  const clearCollections = async () => {
+  const clearCollections = async (collections: TanstackCollections) => {
     for (const collection of Object.values(collections)) {
       const keys = Array.from(collection.state.keys())
       if (keys.length > 0) {
@@ -69,10 +76,12 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
     })
 
     try {
-      clearCollections()
+      const collections = collectionsResource.latest
+      if (!collections) throw new Error('TanstackDB is not ready yet')
+      clearCollections(collections)
 
       const seedStart = performance.now()
-      await seedTestData()
+      await seedTestData(collections)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
@@ -90,7 +99,7 @@ export function TestTanstackDbIvm(props: { query: string; rowCount: number }) {
         insertProgress: 0,
       })
       const homeRows = props.rowCount
-      insertTestDataNonBlocking(homeRows)
+      insertTestDataNonBlocking(collections, homeRows)
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,

@@ -1,4 +1,4 @@
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import {
   type QueryResultPayload,
@@ -10,9 +10,9 @@ import {
   executeStoolap,
   executeStoolapBatch,
   type StoolapDatabase,
-  StoolapDB,
   type StoolapExecuteRows,
-} from './stoolapDB.tsx'
+  stoolapFactory,
+} from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -132,7 +132,7 @@ const clearTables = (db: StoolapDatabase) => {
 }
 
 export function TestStoolapQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(StoolapDB)
+  const [dbResource] = createResource<StoolapDatabase>(stoolapFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [queryColumns, setQueryColumns] = createSignal<string[]>([])
   const [state, setState] = createStore({
@@ -159,6 +159,8 @@ export function TestStoolapQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
+      const db = dbResource.latest
+      if (!db) throw new Error('Stoolap is not ready yet')
       clearTables(db)
 
       const seedStart = performance.now()

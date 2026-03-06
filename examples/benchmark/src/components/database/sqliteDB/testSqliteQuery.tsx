@@ -1,4 +1,4 @@
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import {
   type QueryResultPayload,
@@ -6,7 +6,7 @@ import {
 } from '../components/testTemplate.tsx'
 import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
-import { SqliteDB } from './sqliteDB.tsx'
+import { sqliteFactory, type SqliteDb } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -22,7 +22,7 @@ const sqlValue = (value: unknown) => {
 }
 
 const insertHomeFeatureBatch = async (
-  db: typeof SqliteDB.defaultValue,
+  db: SqliteDb,
   rows: Array<{
     id: number
     bed_quantity: number
@@ -40,7 +40,7 @@ const insertHomeFeatureBatch = async (
   )
 
 const insertLocalityBatch = async (
-  db: typeof SqliteDB.defaultValue,
+  db: SqliteDb,
   rows: Array<{
     id: number
     suburb_name: string
@@ -58,7 +58,7 @@ const insertLocalityBatch = async (
   )
 
 const insertHomeBatch = async (
-  db: typeof SqliteDB.defaultValue,
+  db: SqliteDb,
   rows: Array<{
     id: number
     locality_table_id: number
@@ -76,7 +76,7 @@ const insertHomeBatch = async (
       .join(', ')};`,
   )
 
-const seedTestData = async (db: typeof SqliteDB.defaultValue) => {
+const seedTestData = async (db: SqliteDb) => {
   const batchSize = 2000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     await insertHomeFeatureBatch(
@@ -93,7 +93,7 @@ const seedTestData = async (db: typeof SqliteDB.defaultValue) => {
 }
 
 const insertTestDataNonBlocking = async (
-  db: typeof SqliteDB.defaultValue,
+  db: SqliteDb,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -109,7 +109,7 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = async (db: typeof SqliteDB.defaultValue) => {
+const clearTables = async (db: SqliteDb) => {
   await db.batch((sql) => [
     sql`DELETE FROM home_table`,
     sql`DELETE FROM locality_table`,
@@ -118,7 +118,7 @@ const clearTables = async (db: typeof SqliteDB.defaultValue) => {
 }
 
 export function TestSqliteQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(SqliteDB)
+  const [dbResource] = createResource<SqliteDb>(sqliteFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
@@ -143,6 +143,8 @@ export function TestSqliteQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
+      const db = dbResource.latest
+      if (!db) throw new Error('SQLite is not ready yet')
       await clearTables(db)
 
       const seedStart = performance.now()

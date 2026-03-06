@@ -1,4 +1,4 @@
-import { createEffect, createSignal, useContext } from 'solid-js'
+import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import {
   type QueryResultPayload,
@@ -6,8 +6,7 @@ import {
 } from '../components/testTemplate.tsx'
 import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
-import { sqlSchema } from '../util/schema/schema.sql.ts'
-import { TursoDB } from './tursoDB.tsx'
+import { type TursoDb, tursoFactory } from './util.ts'
 
 const yieldToUi = () =>
   new Promise<void>((resolve) => {
@@ -15,7 +14,7 @@ const yieldToUi = () =>
   })
 
 const insertBatch = async (
-  db: typeof TursoDB.defaultValue,
+  db: TursoDb,
   table: string,
   columns: string[],
   rows: Array<Array<unknown>>,
@@ -39,7 +38,7 @@ const insertBatch = async (
   await statement.run(...params)
 }
 
-const seedTestData = async (db: typeof TursoDB.defaultValue) => {
+const seedTestData = async (db: TursoDb) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
@@ -74,7 +73,7 @@ const seedTestData = async (db: typeof TursoDB.defaultValue) => {
 }
 
 const insertTestDataNonBlocking = async (
-  db: typeof TursoDB.defaultValue,
+  db: TursoDb,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -105,14 +104,14 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = async (db: typeof TursoDB.defaultValue) => {
+const clearTables = async (db: TursoDb) => {
   await db.exec('DELETE FROM home_table')
   await db.exec('DELETE FROM locality_table')
   await db.exec('DELETE FROM home_feature_table')
 }
 
 export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
-  const db = useContext(TursoDB)
+  const [dbResource] = createResource<TursoDb>(tursoFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
@@ -137,7 +136,8 @@ export function TestTursoDbQuery(props: { query: string; rowCount: number }) {
     })
 
     try {
-      await db.exec(sqlSchema)
+      const db = dbResource.latest
+      if (!db) throw new Error('Turso is not ready yet')
 
       await clearTables(db)
 
