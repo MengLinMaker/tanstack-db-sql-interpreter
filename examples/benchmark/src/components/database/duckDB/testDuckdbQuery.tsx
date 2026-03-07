@@ -11,23 +11,12 @@ import { formatTestError } from '../util/formatTestError.ts'
 import { duckdbFactory } from './util.ts'
 
 const yieldToUi = () =>
-  new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => resolve())
-  })
-
-type DuckdbResult = {
-  toArray?: () => unknown[]
-}
-
-const normalizeRows = (result: unknown) => {
-  const rows = (result as DuckdbResult | null)?.toArray?.()
-  return rows ?? (result as unknown[])
-}
+  new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
 
 const queryDuckdbRows = async (conn: AsyncDuckDBConnection, sql: string) => {
   const startedAt = performance.now()
   const result = await conn.query(sql)
-  const rows = normalizeRows(result)
+  const rows = result.toArray()
   const durationMs = performance.now() - startedAt
   return { rows, durationMs }
 }
@@ -44,25 +33,20 @@ const insertBatch = async (
   columns: Record<string, any[]>,
   tableName: string,
 ) => {
-  const tableIPC = tableToIPC(tableFromArrays(columns))
-  await conn.insertArrowFromIPCStream(tableIPC, {
+  const table = tableFromArrays(columns)
+  const ipc = tableToIPC(table)
+  await conn.insertArrowFromIPCStream(ipc, {
     name: tableName,
-    create: false,
+    create: false, // Append to existing data
   })
 }
 
+const home_feature_table_column = rowsToColumns(seed.home_feature_table)
+const locality_table_column = rowsToColumns(seed.locality_table)
 const seedTestData = async (conn: AsyncDuckDBConnection) => {
-  const batchSize = 1000
-  for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
-    const batch = seed.home_feature_table.slice(i, i + batchSize)
-    await insertBatch(conn, rowsToColumns(batch), 'home_feature_table')
-    await yieldToUi()
-  }
-  for (let i = 0; i < seed.locality_table.length; i += batchSize) {
-    const batch = seed.locality_table.slice(i, i + batchSize)
-    await insertBatch(conn, rowsToColumns(batch), 'locality_table')
-    await yieldToUi()
-  }
+  await insertBatch(conn, home_feature_table_column, 'home_feature_table')
+  await insertBatch(conn, locality_table_column, 'locality_table')
+  await yieldToUi()
 }
 
 const insertTestDataNonBlocking = async (
@@ -70,7 +54,7 @@ const insertTestDataNonBlocking = async (
   count: number,
   onProgress?: (current: number) => void,
 ) => {
-  const batchSize = 1000
+  const batchSize = 10000
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
     const rows = Array.from({ length: batchCount }, () => generate.home_table())
