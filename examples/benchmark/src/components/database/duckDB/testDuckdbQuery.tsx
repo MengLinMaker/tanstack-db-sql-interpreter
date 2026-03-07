@@ -1,4 +1,5 @@
 import type { AsyncDuckDB, AsyncDuckDBConnection } from '@duckdb/duckdb-wasm'
+import { tableFromArrays, tableToIPC } from 'apache-arrow'
 import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import {
@@ -10,82 +11,34 @@ import { formatTestError } from '../util/formatTestError.ts'
 import { duckdbFactory } from './util.ts'
 
 const yieldToUi = () =>
-  new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => resolve())
-  })
+  new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
 
-type DuckdbResult = {
-  toArray?: () => unknown[]
-}
-
-const normalizeRows = (result: unknown) => {
-  const rows = (result as DuckdbResult | null)?.toArray?.()
-  return rows ?? (result as unknown[])
-}
-
-const queryDuckdbRows = async (conn: AsyncDuckDBConnection, sql: string) => {
-  const startedAt = performance.now()
-  const result = await conn.query(sql)
-  const rows = normalizeRows(result)
-  const durationMs = performance.now() - startedAt
-  return { rows, durationMs }
+const rowsToColumns = (rows: Record<string, any>[]) => {
+  const columns: Record<string, any[]> = {}
+  const keys = Object.keys(rows[0]!)
+  for (const key of keys) columns[key] = rows.map((o) => o[key])
+  return columns
 }
 
 const insertBatch = async (
   conn: AsyncDuckDBConnection,
-  table: string,
-  columns: string[],
-  rows: Array<Array<unknown>>,
+  columns: Record<string, any[]>,
+  tableName: string,
 ) => {
-  if (rows.length === 0) return
-  const columnList = columns.join(', ')
-  const placeholders: string[] = []
-  const params: unknown[] = []
-  rows.forEach((row) => {
-    const rowPlaceholders = columns.map(() => `?`).join(', ')
-    placeholders.push(`(${rowPlaceholders})`)
-    params.push(...row)
+  const table = tableFromArrays(columns)
+  const ipc = tableToIPC(table)
+  await conn.insertArrowFromIPCStream(ipc, {
+    name: tableName,
+    create: false, // Append to existing data
   })
-  const stmt = await conn.prepare(
-    `INSERT INTO ${table} (${columnList})
-     VALUES ${placeholders.join(', ')}`,
-  )
-  await stmt.query(...params)
-  await stmt.close()
 }
 
+const home_feature_table_column = rowsToColumns(seed.home_feature_table)
+const locality_table_column = rowsToColumns(seed.locality_table)
 const seedTestData = async (conn: AsyncDuckDBConnection) => {
-  const batchSize = 1000
-  for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
-    const batch = seed.home_feature_table.slice(i, i + batchSize)
-    await insertBatch(
-      conn,
-      'home_feature_table',
-      ['id', 'bed_quantity', 'bath_quantity', 'car_quantity'],
-      batch.map((row) => [
-        row.id,
-        row.bed_quantity,
-        row.bath_quantity,
-        row.car_quantity,
-      ]),
-    )
-    await yieldToUi()
-  }
-  for (let i = 0; i < seed.locality_table.length; i += batchSize) {
-    const batch = seed.locality_table.slice(i, i + batchSize)
-    await insertBatch(
-      conn,
-      'locality_table',
-      ['id', 'suburb_name', 'postcode', 'state_abbreviation'],
-      batch.map((row) => [
-        row.id,
-        row.suburb_name,
-        row.postcode,
-        row.state_abbreviation,
-      ]),
-    )
-    await yieldToUi()
-  }
+  await insertBatch(conn, home_feature_table_column, 'home_feature_table')
+  await insertBatch(conn, locality_table_column, 'locality_table')
+  await yieldToUi()
 }
 
 const insertTestDataNonBlocking = async (
@@ -93,28 +46,11 @@ const insertTestDataNonBlocking = async (
   count: number,
   onProgress?: (current: number) => void,
 ) => {
-  const batchSize = 1000
-  const columns = [
-    'id',
-    'locality_table_id',
-    'home_feature_table_id',
-    'street_address',
-    'higher_price_aud',
-  ]
+  const batchSize = 10000
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
-    const rows: Array<Array<unknown>> = []
-    for (let j = 0; j < batchCount; j++) {
-      const row = generate.home_table()
-      rows.push([
-        row.id,
-        row.locality_table_id,
-        row.home_feature_table_id,
-        row.street_address,
-        row.higher_price_aud,
-      ])
-    }
-    await insertBatch(conn, 'home_table', columns, rows)
+    const rows = Array.from({ length: batchCount }, () => generate.home_table())
+    await insertBatch(conn, rowsToColumns(rows), 'home_table')
     onProgress?.(i + batchCount)
     await yieldToUi()
   }
@@ -181,11 +117,13 @@ export default function TestDuckdbQuery(props: {
         insertProgress: 100,
       })
 
-      const { rows, durationMs } = await queryDuckdbRows(conn, props.query)
-      setQueryResult(Array.isArray(rows) ? rows : [rows])
-      setState({ queryStatus: `${durationMs.toFixed(1)} ms` })
-
+      const queryStart = performance.now()
+      const result = await conn.query(props.query)
+      const rows = result.toArray()
+      const queryDuration = performance.now() - queryStart
+      setQueryResult(rows)
       setState({
+        queryStatus: `${queryDuration.toFixed(1)} ms`,
         testStatus: 'Finished',
         isFinished: true,
       })
