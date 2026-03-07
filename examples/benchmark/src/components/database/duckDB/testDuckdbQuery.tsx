@@ -13,14 +13,6 @@ import { duckdbFactory } from './util.ts'
 const yieldToUi = () =>
   new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
 
-const queryDuckdbRows = async (conn: AsyncDuckDBConnection, sql: string) => {
-  const startedAt = performance.now()
-  const result = await conn.query(sql)
-  const rows = result.toArray()
-  const durationMs = performance.now() - startedAt
-  return { rows, durationMs }
-}
-
 const rowsToColumns = (rows: Record<string, any>[]) => {
   const columns: Record<string, any[]> = {}
   const keys = Object.keys(rows[0]!)
@@ -125,11 +117,13 @@ export default function TestDuckdbQuery(props: {
         insertProgress: 100,
       })
 
-      const { rows, durationMs } = await queryDuckdbRows(conn, props.query)
-      setQueryResult(Array.isArray(rows) ? rows : [rows])
-      setState({ queryStatus: `${durationMs.toFixed(1)} ms` })
-
+      const queryStart = performance.now()
+      const result = await conn.query(props.query)
+      const rows = result.toArray()
+      const queryDuration = performance.now() - queryStart
+      setQueryResult(rows)
       setState({
+        queryStatus: `${queryDuration.toFixed(1)} ms`,
         testStatus: 'Finished',
         isFinished: true,
       })
