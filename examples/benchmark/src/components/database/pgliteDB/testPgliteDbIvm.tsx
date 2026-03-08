@@ -1,10 +1,10 @@
 import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
+import type { SqlTestProp } from '../../sqlTest.tsx'
 import {
   type QueryResultPayload,
   TestTemplate,
 } from '../components/testTemplate.tsx'
-import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
 import { type PgliteDb, pgliteFactory } from './util.ts'
 
@@ -16,10 +16,10 @@ const yieldToUi = () =>
 const insertBatch = async (
   db: PgliteDb,
   table: string,
-  columns: string[],
-  rows: Array<Array<unknown>>,
+  rows: Record<string, unknown>[],
 ) => {
   if (rows.length === 0) return
+  const columns = Object.keys(rows[0]!)
   const columnList = columns.join(', ')
   const placeholders: string[] = []
   const params: unknown[] = []
@@ -29,7 +29,7 @@ const insertBatch = async (
       .map((_, colIndex) => `$${offset + colIndex + 1}`)
       .join(', ')
     placeholders.push(`(${rowPlaceholders})`)
-    params.push(...row)
+    params.push(...columns.map((column) => row[column]))
   })
   await db.query(
     `INSERT INTO ${table} (${columnList})
@@ -38,68 +38,30 @@ const insertBatch = async (
   )
 }
 
-const seedTestData = async (db: PgliteDb) => {
+const seedTestData = async (db: PgliteDb, seed: SqlTestProp['seed']) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
-    await insertBatch(
-      db,
-      'home_feature_table',
-      ['id', 'bed_quantity', 'bath_quantity', 'car_quantity'],
-      batch.map((row) => [
-        row.id,
-        row.bed_quantity,
-        row.bath_quantity,
-        row.car_quantity,
-      ]),
-    )
+    await insertBatch(db, 'home_feature_table', batch)
     await yieldToUi()
   }
   for (let i = 0; i < seed.locality_table.length; i += batchSize) {
     const batch = seed.locality_table.slice(i, i + batchSize)
-    await insertBatch(
-      db,
-      'locality_table',
-      ['id', 'suburb_name', 'postcode', 'state_abbreviation'],
-      batch.map((row) => [
-        row.id,
-        row.suburb_name,
-        row.postcode,
-        row.state_abbreviation,
-      ]),
-    )
+    await insertBatch(db, 'locality_table', batch)
     await yieldToUi()
   }
 }
 
 const insertTestDataNonBlocking = async (
   db: PgliteDb,
-  count: number,
+  seed: SqlTestProp['seed'],
   onProgress?: (current: number) => void,
 ) => {
   const batchSize = 1000
-  const columns = [
-    'id',
-    'locality_table_id',
-    'home_feature_table_id',
-    'street_address',
-    'higher_price_aud',
-  ]
-  for (let i = 0; i < count; i += batchSize) {
-    const batchCount = Math.min(batchSize, count - i)
-    const rows: Array<Array<unknown>> = []
-    for (let j = 0; j < batchCount; j++) {
-      const row = generate.home_table()
-      rows.push([
-        row.id,
-        row.locality_table_id,
-        row.home_feature_table_id,
-        row.street_address,
-        row.higher_price_aud,
-      ])
-    }
-    await insertBatch(db, 'home_table', columns, rows)
-    onProgress?.(i + batchCount)
+  for (let i = 0; i < seed.home_table.length; i += batchSize) {
+    const batch = seed.home_table.slice(i, i + batchSize)
+    await insertBatch(db, 'home_table', batch)
+    onProgress?.(Math.min(i + batchSize, seed.home_table.length))
     await yieldToUi()
   }
 }
@@ -111,10 +73,7 @@ const clearTables = async (db: PgliteDb) => {
   await db.exec('VACUUM FULL')
 }
 
-export default function TestPgliteDbIvm(props: {
-  query: string
-  rowCount: number
-}) {
+export default function TestPgliteDbIvm(props: SqlTestProp) {
   const [dbResource] = createResource<PgliteDb>(pgliteFactory)
   const [state, setState] = createStore({
     insertStatus: '',
@@ -162,13 +121,16 @@ export default function TestPgliteDbIvm(props: {
       })
 
       const seedStart = performance.now()
-      await seedTestData(db)
+      await seedTestData(db, props.seed)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
-      await insertTestDataNonBlocking(db, props.rowCount, (current) => {
-        const progress = Math.min(100, (current / props.rowCount) * 100)
+      await insertTestDataNonBlocking(db, props.seed, (current) => {
+        const progress = Math.min(
+          100,
+          (current / props.seed.home_table.length) * 100,
+        )
         setState({
           insertStatus: 'Inserting…',
           insertProgress: progress,

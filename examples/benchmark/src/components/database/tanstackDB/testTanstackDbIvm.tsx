@@ -2,18 +2,16 @@ import { liveQuerySql } from '@menglinmaker/tanstack-db-sql-interpreter'
 import { createCollection, liveQueryCollectionOptions } from '@tanstack/db'
 import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
+import type { SqlTestProp } from '../../sqlTest.tsx'
 import {
   type QueryResultPayload,
   TestTemplate,
 } from '../components/testTemplate.tsx'
-import { generate, seed } from '../util/dataGenerator.ts'
+import { generate } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
 import { type TanstackCollections, tanstackDbFactory } from './util.ts'
 
-export default function TestTanstackDbIvm(props: {
-  query: string
-  rowCount: number
-}) {
+export default function TestTanstackDbIvm(props: SqlTestProp) {
   const [collectionsResource] =
     createResource<TanstackCollections>(tanstackDbFactory)
   const [state, setState] = createStore({
@@ -33,19 +31,25 @@ export default function TestTanstackDbIvm(props: {
     rows: any[],
   ) => collections[tableName]!.insert(rows)
 
-  const seedTestData = (collections: TanstackCollections) => {
+  const gen_home_table = generate.home_table()
+  const seedTestData = (
+    collections: TanstackCollections,
+    seed: SqlTestProp['seed'],
+  ) => {
     insertBatch(collections, 'home_feature_table', seed.home_feature_table)
     insertBatch(collections, 'locality_table', seed.locality_table)
-    insertBatch(collections, 'home_table', [generate.home_table()])
+    insertBatch(collections, 'home_table', [gen_home_table])
   }
 
   const insertTestDataNonBlocking = (
     collections: TanstackCollections,
-    count: number,
+    seed: SqlTestProp['seed'],
   ) => {
     const batchSize = 1000
+    const count = seed.home_table.length
     for (let i = 0; i < count; i += batchSize) {
       const batchCount = Math.min(batchSize, count - i)
+      // TODO: replace with seed
       const rows = Array.from({ length: batchCount }, () =>
         generate.home_table(),
       )
@@ -84,7 +88,7 @@ export default function TestTanstackDbIvm(props: {
       clearCollections(collections)
 
       const seedStart = performance.now()
-      await seedTestData(collections)
+      await seedTestData(collections, props.seed)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
@@ -101,8 +105,7 @@ export default function TestTanstackDbIvm(props: {
         insertStatus: 'Inserting…',
         insertProgress: 0,
       })
-      const homeRows = props.rowCount
-      insertTestDataNonBlocking(collections, homeRows)
+      insertTestDataNonBlocking(collections, props.seed)
       const insertDuration = performance.now() - insertStart
       setState({
         insertStatus: `${insertDuration.toFixed(1)} ms`,

@@ -1,10 +1,10 @@
 import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
+import type { SqlTestProp } from '../../sqlTest.tsx'
 import {
   type QueryResultPayload,
   TestTemplate,
 } from '../components/testTemplate.tsx'
-import { generate, seed } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
 import { type TursoDb, tursoFactory } from './util.ts'
 
@@ -16,11 +16,10 @@ const yieldToUi = () =>
 const insertBatch = async (
   db: TursoDb,
   table: string,
-  columns: string[],
-  rows: Array<Array<unknown>>,
+  rows: Record<string, any>[],
 ) => {
   if (rows.length === 0) return
-  const columnList = columns.join(', ')
+  const columns = Object.keys(rows[0]!)
   const placeholders: string[] = []
   const params: unknown[] = []
   rows.forEach((row, rowIndex) => {
@@ -29,76 +28,40 @@ const insertBatch = async (
       .map((_, colIndex) => `$${offset + colIndex + 1}`)
       .join(', ')
     placeholders.push(`(${rowPlaceholders})`)
-    params.push(...row)
+    params.push(Object.values(row))
   })
   const statement = db.prepare(
-    `INSERT INTO ${table} (${columnList})
+    `INSERT INTO ${table} (${columns.join(', ')})
      VALUES ${placeholders.join(', ')}`,
   )
   await statement.run(...params)
 }
 
-const seedTestData = async (db: TursoDb) => {
+const seedTestData = async (db: TursoDb, seed: SqlTestProp['seed']) => {
   const batchSize = 1000
   for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
     const batch = seed.home_feature_table.slice(i, i + batchSize)
-    await insertBatch(
-      db,
-      'home_feature_table',
-      ['id', 'bed_quantity', 'bath_quantity', 'car_quantity'],
-      batch.map((row) => [
-        row.id,
-        row.bed_quantity,
-        row.bath_quantity,
-        row.car_quantity,
-      ]),
-    )
+    await insertBatch(db, 'home_feature_table', batch)
     await yieldToUi()
   }
   for (let i = 0; i < seed.locality_table.length; i += batchSize) {
     const batch = seed.locality_table.slice(i, i + batchSize)
-    await insertBatch(
-      db,
-      'locality_table',
-      ['id', 'suburb_name', 'postcode', 'state_abbreviation'],
-      batch.map((row) => [
-        row.id,
-        row.suburb_name,
-        row.postcode,
-        row.state_abbreviation,
-      ]),
-    )
+    await insertBatch(db, 'locality_table', batch)
     await yieldToUi()
   }
 }
 
 const insertTestDataNonBlocking = async (
   db: TursoDb,
-  count: number,
+  seed: SqlTestProp['seed'],
   onProgress?: (current: number) => void,
 ) => {
   const batchSize = 1000
-  const columns = [
-    'id',
-    'locality_table_id',
-    'home_feature_table_id',
-    'street_address',
-    'higher_price_aud',
-  ]
+  const count = seed.home_table.length
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
-    const rows: Array<Array<unknown>> = []
-    for (let j = 0; j < batchCount; j++) {
-      const row = generate.home_table()
-      rows.push([
-        row.id,
-        row.locality_table_id,
-        row.home_feature_table_id,
-        row.street_address,
-        row.higher_price_aud,
-      ])
-    }
-    await insertBatch(db, 'home_table', columns, rows)
+    const batch = seed.home_table.slice(i, batchCount)
+    await insertBatch(db, 'home_table', batch)
     onProgress?.(i + batchCount)
     await yieldToUi()
   }
@@ -110,10 +73,7 @@ const clearTables = async (db: TursoDb) => {
   await db.exec('DELETE FROM home_feature_table')
 }
 
-export default function TestTursoDbQuery(props: {
-  query: string
-  rowCount: number
-}) {
+export default function TestTursoDbQuery(props: SqlTestProp) {
   const [dbResource] = createResource<TursoDb>(tursoFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
@@ -145,13 +105,13 @@ export default function TestTursoDbQuery(props: {
       await clearTables(db)
 
       const seedStart = performance.now()
-      await seedTestData(db)
+      await seedTestData(db, props.seed)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
-      await insertTestDataNonBlocking(db, homeRows, (current) => {
+      await insertTestDataNonBlocking(db, props.seed, (current) => {
         const progress = Math.min(100, (current / homeRows) * 100)
         setState({
           insertStatus: 'Inserting…',

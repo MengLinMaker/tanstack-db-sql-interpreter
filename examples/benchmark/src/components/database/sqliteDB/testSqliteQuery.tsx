@@ -1,10 +1,11 @@
 import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
+import type { SqlTestProp } from '../../sqlTest.tsx'
 import {
   type QueryResultPayload,
   TestTemplate,
 } from '../components/testTemplate.tsx'
-import { generate, seed } from '../util/dataGenerator.ts'
+import { generate } from '../util/dataGenerator.ts'
 import { formatTestError } from '../util/formatTestError.ts'
 import { type SqliteDb, sqliteFactory } from './util.ts'
 
@@ -76,30 +77,22 @@ const insertHomeBatch = async (
       .join(', ')};`,
   )
 
-const seedTestData = async (db: SqliteDb) => {
-  const batchSize = 2000
-  for (let i = 0; i < seed.home_feature_table.length; i += batchSize) {
-    await insertHomeFeatureBatch(
-      db,
-      seed.home_feature_table.slice(i, i + batchSize),
-    )
-  }
-  for (let i = 0; i < seed.locality_table.length; i += batchSize) {
-    await insertLocalityBatch(db, seed.locality_table.slice(i, i + batchSize))
-    if (((i / batchSize) & 1) === 1) {
-      await yieldToUi()
-    }
-  }
+const seedTestData = async (db: SqliteDb, seed: SqlTestProp['seed']) => {
+  await insertHomeFeatureBatch(db, seed.home_feature_table)
+  await insertLocalityBatch(db, seed.locality_table)
+  await yieldToUi()
 }
 
 const insertTestDataNonBlocking = async (
   db: SqliteDb,
-  count: number,
+  seed: SqlTestProp['seed'],
   onProgress?: (current: number) => void,
 ) => {
-  const batchSize = 2000
+  const batchSize = 10000
+  const count = seed.home_table.length
   for (let i = 0; i < count; i += batchSize) {
     const batchCount = Math.min(batchSize, count - i)
+    // TODO: replace with seed
     const rows = Array.from({ length: batchCount }, () => generate.home_table())
     await insertHomeBatch(db, rows)
     onProgress?.(i + batchCount)
@@ -117,10 +110,7 @@ const clearTables = async (db: SqliteDb) => {
   ])
 }
 
-export default function TestSqliteQuery(props: {
-  query: string
-  rowCount: number
-}) {
+export default function TestSqliteQuery(props: SqlTestProp) {
   const [dbResource] = createResource<SqliteDb>(sqliteFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
@@ -151,13 +141,13 @@ export default function TestSqliteQuery(props: {
       await clearTables(db)
 
       const seedStart = performance.now()
-      await seedTestData(db)
+      await seedTestData(db, props.seed)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
-      await insertTestDataNonBlocking(db, homeRows, (current) => {
+      await insertTestDataNonBlocking(db, props.seed, (current) => {
         const progress = Math.min(100, (current / homeRows) * 100)
         setState({
           insertStatus: 'Inserting…',
