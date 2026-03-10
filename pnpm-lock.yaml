@@ -74,9 +74,6 @@ importers:
       '@faker-js/faker':
         specifier: ^10.3.0
         version: 10.3.0
-      '@m-taan/duckdb-wasm':
-        specifier: ^1.13.1
-        version: 1.13.1
       '@menglinmaker/tanstack-db-sql-interpreter':
         specifier: workspace:*
         version: link:../../packages/tanstack-db-sql-interpreter
@@ -762,9 +759,6 @@ packages:
 
   '@loaderkit/resolve@1.0.4':
     resolution: {integrity: sha512-rJzYKVcV4dxJv+vW6jlvagF8zvGxHJ2+HTr1e2qOejfmGhAApgJHl8Aog4mMszxceTRiKTTbnpgmTO1bEZHV/A==}
-
-  '@m-taan/duckdb-wasm@1.13.1':
-    resolution: {integrity: sha512-hZU1FHMGtrM72jVybit6nQcdb8xiGZq4vEY1k8236D4xyRZQaBn9TUyl9wLLFeLYlleYTPuZ/uv4qoLqmpjI7A==}
 
   '@marijn/find-cluster-break@1.0.2':
     resolution: {integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==}
@@ -3172,10 +3166,6 @@ snapshots:
   '@loaderkit/resolve@1.0.4':
     dependencies:
       '@braidai/lang': 1.1.2
-
-  '@m-taan/duckdb-wasm@1.13.1':
-    dependencies:
-      apache-arrow: 17.0.0
 
   '@marijn/find-cluster-break@1.0.2': {}
 
