@@ -1,4 +1,4 @@
-import type { Connection, DuckDB } from '@ducklings/browser'
+import type { AsyncDuckDB, AsyncDuckDBConnection } from '@m-taan/duckdb-wasm'
 import { tableFromArrays, tableToIPC } from 'apache-arrow'
 import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
@@ -21,25 +21,28 @@ const rowsToColumns = (rows: Record<string, any>[]) => {
 }
 
 const insertBatch = async (
-  conn: Connection,
+  conn: AsyncDuckDBConnection,
   columns: Record<string, any[]>,
   tableName: string,
 ) => {
   const table = tableFromArrays(columns)
   const ipc = tableToIPC(table)
-  await conn.insertArrowFromIPCStream(tableName, ipc)
+  await conn.insertArrowFromIPCStream(ipc, {
+    name: tableName,
+    create: false, // Append to existing data
+  })
 }
 
 const home_feature_table_column = rowsToColumns(seed.home_feature_table)
 const locality_table_column = rowsToColumns(seed.locality_table)
-const seedTestData = async (conn: Connection) => {
+const seedTestData = async (conn: AsyncDuckDBConnection) => {
   await insertBatch(conn, home_feature_table_column, 'home_feature_table')
   await insertBatch(conn, locality_table_column, 'locality_table')
   await yieldToUi()
 }
 
 const insertTestDataNonBlocking = async (
-  conn: Connection,
+  conn: AsyncDuckDBConnection,
   count: number,
   onProgress?: (current: number) => void,
 ) => {
@@ -53,7 +56,7 @@ const insertTestDataNonBlocking = async (
   }
 }
 
-const clearTables = async (conn: Connection) => {
+const clearTables = async (conn: AsyncDuckDBConnection) => {
   await conn.query('DELETE FROM home_table')
   await conn.query('DELETE FROM locality_table')
   await conn.query('DELETE FROM home_feature_table')
@@ -63,7 +66,7 @@ export default function TestDuckdbQuery(props: {
   query: string
   rowCount: number
 }) {
-  const [dbResource] = createResource<DuckDB>(duckdbFactory)
+  const [dbResource] = createResource<AsyncDuckDB>(duckdbFactory)
   const [queryResult, setQueryResult] = createSignal<unknown[]>([])
   const [state, setState] = createStore({
     insertStatus: '',
@@ -87,7 +90,7 @@ export default function TestDuckdbQuery(props: {
       queryStatus: '',
     })
 
-    let conn: Connection | null = null
+    let conn: AsyncDuckDBConnection | null = null
     try {
       const db = dbResource.latest
       if (!db) throw new Error('DuckDB is not ready yet')
@@ -95,15 +98,12 @@ export default function TestDuckdbQuery(props: {
       await clearTables(conn)
 
       const seedStart = performance.now()
-      console.info('seed')
       await seedTestData(conn)
       const seedDuration = performance.now() - seedStart
       setState({ seedStatus: `${seedDuration.toFixed(1)} ms` })
 
       const insertStart = performance.now()
       const homeRows = props.rowCount
-      console.info('insert')
-
       await insertTestDataNonBlocking(conn, homeRows, (current) => {
         const progress = Math.min(100, (current / homeRows) * 100)
         setState({
@@ -118,7 +118,8 @@ export default function TestDuckdbQuery(props: {
       })
 
       const queryStart = performance.now()
-      const rows = await conn.query(props.query)
+      const result = await conn.query(props.query)
+      const rows = result.toArray()
       const queryDuration = performance.now() - queryStart
       setQueryResult(rows)
       setState({

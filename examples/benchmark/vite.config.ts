@@ -23,11 +23,7 @@ const crossOriginIsolation = () => ({
 export default defineConfig({
   plugins: [solid() as never, crossOriginIsolation(), sqlocal()],
   optimizeDeps: {
-    exclude: [
-      '@electric-sql/pglite',
-      '@electric-sql/pglite/worker',
-      '@ducklings/browser',
-    ],
+    exclude: ['@electric-sql/pglite', '@electric-sql/pglite/worker'],
   },
   worker: {
     format: 'es',
