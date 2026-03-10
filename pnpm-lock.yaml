@@ -53,6 +53,9 @@ importers:
 
   examples/benchmark:
     dependencies:
+      '@akabana/duckdb-wasm':
+        specifier: ^1.31.0
+        version: 1.31.0
       '@codemirror/commands':
         specifier: ^6.10.2
         version: 6.10.2
@@ -157,6 +160,9 @@ importers:
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
 
 packages:
+
+  '@akabana/duckdb-wasm@1.31.0':
+    resolution: {integrity: sha512-HkxV0fQhWIXSUlKNmjtg3Z7Be2NGTBNrVeGTXbDM4gRySU9ICt2mPG9MlGJTA+vEA7OJEFxdQS/KfdDuIyS5wA==}
 
   '@andrewbranch/untar.js@1.0.3':
     resolution: {integrity: sha512-Jh15/qVmrLGhkKJBdXlK1+9tY4lZruYjsgkDFj08ZmDiWVBLJcqkok7Z0/R0In+i1rScBpJlSvrTS2Lm41Pbnw==}
@@ -2649,6 +2655,10 @@ packages:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
 snapshots:
+
+  '@akabana/duckdb-wasm@1.31.0':
+    dependencies:
+      apache-arrow: 17.0.0
 
   '@andrewbranch/untar.js@1.0.3': {}
 
