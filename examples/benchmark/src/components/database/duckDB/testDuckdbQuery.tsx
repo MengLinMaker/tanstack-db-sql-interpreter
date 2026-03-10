@@ -1,4 +1,4 @@
-import type { AsyncDuckDB, AsyncDuckDBConnection } from '@m-taan/duckdb-wasm'
+import type { AsyncDuckDB, AsyncDuckDBConnection } from '@akabana/duckdb-wasm'
 import { tableFromArrays, tableToIPC } from 'apache-arrow'
 import { createEffect, createResource, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
