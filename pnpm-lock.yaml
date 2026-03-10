@@ -53,6 +53,9 @@ importers:
 
   examples/benchmark:
     dependencies:
+      '@akabana/duckdb-wasm':
+        specifier: ^1.31.0
+        version: 1.31.0
       '@codemirror/commands':
         specifier: ^6.10.2
         version: 6.10.2
@@ -65,9 +68,6 @@ importers:
       '@codemirror/view':
         specifier: ^6.26.2
         version: 6.39.15
-      '@duckdb/duckdb-wasm':
-        specifier: ^1.29.0
-        version: 1.32.0
       '@electric-sql/pglite':
         specifier: ^0.3.15
         version: 0.3.15
@@ -89,6 +89,9 @@ importers:
       '@tursodatabase/database-wasm':
         specifier: ^0.4.4
         version: 0.4.4
+      '@uwdata/flechette':
+        specifier: ^2.3.0
+        version: 2.3.0
       apache-arrow:
         specifier: ^21.1.0
         version: 21.1.0
@@ -154,6 +157,9 @@ importers:
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
 
 packages:
+
+  '@akabana/duckdb-wasm@1.31.0':
+    resolution: {integrity: sha512-HkxV0fQhWIXSUlKNmjtg3Z7Be2NGTBNrVeGTXbDM4gRySU9ICt2mPG9MlGJTA+vEA7OJEFxdQS/KfdDuIyS5wA==}
 
   '@andrewbranch/untar.js@1.0.3':
     resolution: {integrity: sha512-Jh15/qVmrLGhkKJBdXlK1+9tY4lZruYjsgkDFj08ZmDiWVBLJcqkok7Z0/R0In+i1rScBpJlSvrTS2Lm41Pbnw==}
@@ -382,9 +388,6 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
-
-  '@duckdb/duckdb-wasm@1.32.0':
-    resolution: {integrity: sha512-IewXTNYEjsZCPE9weUWgtjGxUlMRo7qhX0GF6tq/KjK8bnY+RAl4cyUdYUfcdzbyb4b9ZxPC+FOsCcxgaKFWMg==}
 
   '@electric-sql/pglite@0.3.15':
     resolution: {integrity: sha512-Cj++n1Mekf9ETfdc16TlDi+cDDQF0W7EcbyRHYOAeZdsAe8M/FJg18itDTSwyHfar2WIezawM9o0EKaRGVKygQ==}
@@ -1160,8 +1163,8 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
-  '@types/node@20.19.35':
-    resolution: {integrity: sha512-Uarfe6J91b9HAUXxjvSOdiO2UPOKLm07Q1oh0JHxoZ1y8HoqxDAu3gVrsrOHeiio0kSsoVBt4wFrKOm0dKxVPQ==}
+  '@types/node@20.19.37':
+    resolution: {integrity: sha512-8kzdPJ3FsNsVIurqBs7oodNnCEVbni9yUEkaHbgptDACOPW04jimGagZ51E6+lXUwJjgnBw+hyko/lkFWCldqw==}
 
   '@types/node@24.11.0':
     resolution: {integrity: sha512-fPxQqz4VTgPI/IQ+lj9r0h+fDR66bzoeMGHp8ASee+32OSGIkeASsoZuJixsQoVef1QJbeubcPBxKk22QVoWdw==}
@@ -1210,6 +1213,9 @@ packages:
 
   '@ungap/with-resolvers@0.1.0':
     resolution: {integrity: sha512-g7f0IkJdPW2xhY7H4iE72DAsIyfuwEFc6JWc2tYFwKDMWWAF699vGjrM348cwQuOXgHpe1gWFe+Eiyjx/ewvvw==}
+
+  '@uwdata/flechette@2.3.0':
+    resolution: {integrity: sha512-FdTqVEJZL4MwTv+vY1jOUMW2i5pr/G5S4BGdmQ/7wSOCtA0I74UP117kzXiKe1FrB5+ydM4tFxrCdF8Dq9WgNA==}
 
   '@vitest/coverage-v8@4.0.18':
     resolution: {integrity: sha512-7i+N2i0+ME+2JFZhfuz7Tg/FqKtilHjGyGvoHYQ6iLV0zahbsJ9sljC9OcFcPDbhYKCet+sG8SsVqlyGvPflZg==}
@@ -2644,6 +2650,10 @@ packages:
 
 snapshots:
 
+  '@akabana/duckdb-wasm@1.31.0':
+    dependencies:
+      apache-arrow: 17.0.0
+
   '@andrewbranch/untar.js@1.0.3': {}
 
   '@arethetypeswrong/cli@0.18.2':
@@ -2901,10 +2911,6 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
-
-  '@duckdb/duckdb-wasm@1.32.0':
-    dependencies:
-      apache-arrow: 17.0.0
 
   '@electric-sql/pglite@0.3.15': {}
 
@@ -3464,7 +3470,7 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@types/node@20.19.35':
+  '@types/node@20.19.37':
     dependencies:
       undici-types: 6.21.0
 
@@ -3506,6 +3512,8 @@ snapshots:
   '@ungap/structured-clone@1.3.0': {}
 
   '@ungap/with-resolvers@0.1.0': {}
+
+  '@uwdata/flechette@2.3.0': {}
 
   '@vitest/coverage-v8@4.0.18(vitest@4.0.18(@types/node@24.11.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
@@ -3596,7 +3604,7 @@ snapshots:
       '@swc/helpers': 0.5.19
       '@types/command-line-args': 5.2.3
       '@types/command-line-usage': 5.0.4
-      '@types/node': 20.19.35
+      '@types/node': 20.19.37
       command-line-args: 5.2.1
       command-line-usage: 7.0.3
       flatbuffers: 24.12.23
