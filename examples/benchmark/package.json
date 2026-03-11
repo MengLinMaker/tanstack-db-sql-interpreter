@@ -17,6 +17,7 @@
     "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.26.2",
+    "@ducklings/browser": "1.4.4-dev.1",
     "@electric-sql/pglite": "^0.3.15",
     "@faker-js/faker": "^10.3.0",
     "@menglinmaker/tanstack-db-sql-interpreter": "workspace:*",
