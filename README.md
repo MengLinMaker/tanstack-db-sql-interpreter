@@ -1,5 +1,6 @@
 # tanstack-db-sql-interpreter
 Let app users write their own SQL for tanstack db queries.
+See [benchmark](https://tanstack-db-sql-interpreter-benchmark.pages.dev/) compared to other localfirst databases.
 
 ## Why?
 Imagine you had a data stream that you want to visualise and even query on.
